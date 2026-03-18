@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./dist",
+    "allowJs": true,
+
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "src/configs/db.ts",
+    "src/app.js",
+    "__tests__/**/*.ts"
+  ],
+  "exclude": ["dist", "node_modules", "*.docker", ".git*", "compose.yaml"]
+}

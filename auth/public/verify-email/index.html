@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Email</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="verify">
+      <h1>Verify your email</h1>
+
+      <p class="subtitle">
+        Hey <span id="userName"></span>, we sent a 4-digit code to
+        <span id="userEmail"></span>
+      </p>
+
+      <form class="otp-form" onsubmit="verifyEmail(event)">
+        <div class="otp-inputs">
+          <input id="code1" type="text" inputmode="numeric" maxlength="1" />
+          <input id="code2" type="text" inputmode="numeric" maxlength="1" />
+          <input id="code3" type="text" inputmode="numeric" maxlength="1" />
+          <input id="code4" type="text" inputmode="numeric" maxlength="1" />
+        </div>
+
+        <button type="submit" id="verifyMailBtn">Verify</button>
+      </form>
+
+      <div class="resend">
+        Didn’t receive the code?
+        <button type="button" id="resendBtn">Resend</button>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
