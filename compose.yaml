@@ -21,7 +21,7 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     networks:
-      - auth_service_backend
+      - cryptweb_backend
 
   # redis:
   #   build: redis
@@ -43,4 +43,4 @@ volumes:
   data:
 
 networks:
-  auth_service_backend:
+  cryptweb_backend:

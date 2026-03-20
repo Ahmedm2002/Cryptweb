@@ -39,3 +39,15 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens(
   token_hash TEXT NOT NULL,
   used_at TIMESTAMPTZ DEFAULT NULL
 )
+
+CREATE TABLE IF NOT EXISTS file_transfers(
+  id UUID PRIMARY KEY default gen_random_uuid(),
+  sender UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  total_chunks INTEGER NOT NULL,
+  file_name TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  file_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ DEFAULT NULL
+)
