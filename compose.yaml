@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:latest
-    container_name: postgresql
+    container_name: pg_database
     environment:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_USER=${DATABASE_USER}
@@ -11,7 +11,7 @@ services:
     volumes:
       - data:/var/lib/postgresql/
     networks:
-      - auth_service_backend
+      - cryptweb_backend
   pgAdmin:
     image: dpage/pgadmin4
     container_name: pgAdmin
@@ -29,7 +29,7 @@ services:
   #     - "8080:80"
   backend:
     build: .
-    container_name: auth_service
+    container_name: cryptweb_backend
     environment:
       - PORT=3000
     depends_on:
@@ -37,7 +37,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - auth_service_backend
+      - cryptweb_backend
 
 volumes:
   data:

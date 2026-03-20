@@ -17,7 +17,7 @@
     "zod": "^4.3.5",
     "zod-validation-error": "^5.0.0"
   },
-  "name": "auth_service",
+  "name": "Cryptweb",
   "version": "1.0.0",
   "description": "Stateless API-first authentication with email login, verification, and password recovery. Built with Node.js, Express, and PostgreSQL for secure and scalable user management.",
   "main": "index.ts",
