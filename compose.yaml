@@ -14,7 +14,7 @@ services:
       - cryptweb_backend
   pgAdmin:
     image: dpage/pgadmin4
-    container_name: pgAdmin
+    container_name: db_admin
     ports:
       - "8000:80"
     environment:
@@ -23,10 +23,6 @@ services:
     networks:
       - cryptweb_backend
 
-  # redis:
-  #   build: redis
-  #   ports:
-  #     - "8080:80"
   backend:
     build: .
     container_name: cryptweb_backend

@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS file_transfers(
   file_name TEXT NOT NULL,
   file_size BIGINT NOT NULL,
   file_type TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  completed_at TIMESTAMPTZ DEFAULT NULL
+  time_elapsed INTEGER NOT NULL,
+  completed_at TIMESTAMPTZ DEFAULT NULL,
+  transfer_type TEXT NOT NULL   
 )

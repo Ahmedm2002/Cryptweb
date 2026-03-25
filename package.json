@@ -13,11 +13,12 @@
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "redis": "^5.10.0",
+    "socket.io": "^4.8.3",
     "ua-parser-js": "^2.0.9",
     "zod": "^4.3.5",
     "zod-validation-error": "^5.0.0"
   },
-  "name": "Cryptweb",
+  "name": "cryptweb",
   "version": "1.0.0",
   "description": "Stateless API-first authentication with email login, verification, and password recovery. Built with Node.js, Express, and PostgreSQL for secure and scalable user management.",
   "main": "index.ts",
@@ -25,7 +26,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "npx tsc",
-    "dev": "NODE_ENV=development nodemon --exec tsx src/index.ts",
+    "dev": "nodemon --env-file=.env --exec tsx src/index.ts",
     "start": "npx tsc && node dist/src/index.js"
   },
   "repository": {
@@ -54,6 +55,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/pg": "^8.16.0",
     "@types/pino": "^7.0.4",
+    "@types/socket.io": "^3.0.1",
     "@types/supertest": "^6.0.3",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
