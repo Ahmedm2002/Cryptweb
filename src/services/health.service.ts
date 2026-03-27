@@ -6,7 +6,6 @@ class HealthService {
   constructor() {}
 
   async serverHealth(): Promise<ApiResponse<any> | ApiError> {
-    // App metrics
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
     const formattedMemory = {

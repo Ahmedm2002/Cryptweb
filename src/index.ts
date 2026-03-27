@@ -3,7 +3,9 @@ import server from "./components/singalling.js";
 import { pool } from "./configs/db.js";
 import logger from "./utils/logger/logger.js";
 
-dotenv.config();
+dotenv.config({
+  quiet: true,
+});
 pool
   .connect()
   .then(() => {

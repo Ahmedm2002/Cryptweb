@@ -7,8 +7,22 @@
   </head>
   <body>
     <h1>Socket Server</h1>
-    <script src="socket.io/socket.io.js">
+    <p>Socket Id: <span id="socket-id"></span></p>
+    <p>Connection Status: <span id="connection-status">Connecting...</span></p>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
       const socket = io();
+      socket.on("connect", () => {
+        document.getElementById("socket-id").textContent = socket.id;
+        document.getElementById("connection-status").textContent = "Connected";
+      });
+      socket.on("connect_error", (error) => {
+        document.getElementById("connection-status").textContent =
+          "Connection Error: " + error.message;
+      });
+      socket.on("disconnect", () => {
+        document.getElementById("socket-id").textContent = "Disconnected";
+      });
     </script>
   </body>
 </html>

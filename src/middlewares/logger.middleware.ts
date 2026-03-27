@@ -4,6 +4,16 @@ import type { Response, NextFunction } from "express";
 import crypto from "crypto";
 
 const logRequest = (req: CustomRequest, res: Response, next: NextFunction) => {
+  if (req.protocol === "http" && process.env.NODE_ENV === "production") {
+    logger.warn(
+      { method: req.method, url: req.url },
+      "Insecure request received over HTTP",
+    );
+    return res.status(400).json({
+      status: "error",
+      message: "Insecure request. Please use HTTPS.",
+    });
+  }
   const startTime = Date.now();
 
   const requestId =
