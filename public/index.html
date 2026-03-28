@@ -7,15 +7,24 @@
   </head>
   <body>
     <h1>Socket Server</h1>
+    <p>Email: <span id="user-email"></span></p>
     <p>Socket Id: <span id="socket-id"></span></p>
     <p>Connection Status: <span id="connection-status">Connecting...</span></p>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
+      const num = Math.floor(Math.random() * 10);
+      const data = {
+        name: "Ahmed",
+        email: `a@a${num}.com`,
+      };
+      document.getElementById("user-email").textContent = data.email;
+      socket.emit("register", data);
       socket.on("connect", () => {
         document.getElementById("socket-id").textContent = socket.id;
         document.getElementById("connection-status").textContent = "Connected";
       });
+
       socket.on("connect_error", (error) => {
         document.getElementById("connection-status").textContent =
           "Connection Error: " + error.message;
