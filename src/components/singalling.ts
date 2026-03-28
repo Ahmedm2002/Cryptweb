@@ -2,6 +2,7 @@ import { app } from "../app.js";
 import { Server, Socket } from "socket.io";
 import logger from "../utils/logger/logger.js";
 import { createServer } from "node:http";
+import jwt from "jsonwebtoken";
 import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
@@ -9,7 +10,6 @@ import type {
   WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
-import FileTransfers from "../repositories/file_transfers.repo.js";
 
 const server = createServer(app);
 const io = new Server(server);
@@ -19,8 +19,30 @@ const emailToSocketMap: Map<string, { socketId: string; name: string }> =
 
 const activePeers: Map<string, string> = new Map();
 
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) {
+    logger.warn(
+      { socketId: socket.id },
+      "Socket connection rejected: no token",
+    );
+    return next(new Error("Authentication required"));
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    (socket as any).userId = decoded.sub as string;
+    next();
+  } catch (err) {
+    logger.warn(
+      { socketId: socket.id },
+      "Socket connection rejected: invalid token",
+    );
+    return next(new Error("Invalid or expired token"));
+  }
+});
+
 io.on("connection", (socket: Socket) => {
-  logger.info({ socketId: socket.id }, "New client connected");
+  logger.info({ socketId: socket.id }, "Authenticated client connected");
 
   socket.on("register", async ({ email, name }) => {
     if (!name || !email) {
