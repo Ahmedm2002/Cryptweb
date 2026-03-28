@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Transfers History | Relay</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed": "#23005c",
+              "surface-container": "#201f1f",
+              "on-background": "#e5e2e1",
+              "background": "#131313",
+              "secondary": "#60d4ff",
+              "on-tertiary-fixed-variant": "#82262a",
+              "outline": "#958ea0",
+              "inverse-on-surface": "#313030",
+              "primary": "#d0bcff",
+              "on-primary-fixed-variant": "#5516be",
+              "surface-container-high": "#2a2a2a",
+              "on-surface-variant": "#cbc3d7",
+              "on-secondary-fixed-variant": "#004d63",
+              "secondary-container": "#00a0c9",
+              "primary-fixed-dim": "#d0bcff",
+              "surface-dim": "#131313",
+              "surface": "#131313",
+              "on-surface": "#e5e2e1",
+              "tertiary-container": "#e16d6e",
+              "on-tertiary": "#630e16",
+              "inverse-surface": "#e5e2e1",
+              "surface-container-lowest": "#0e0e0e",
+              "on-tertiary-container": "#590510",
+              "tertiary": "#ffb3b1",
+              "tertiary-fixed": "#ffdad8",
+              "primary-container": "#a078ff",
+              "surface-bright": "#3a3939",
+              "on-secondary-fixed": "#001f29",
+              "on-primary-container": "#340080",
+              "surface-container-low": "#1c1b1b",
+              "on-secondary-container": "#00313f",
+              "surface-container-highest": "#353534",
+              "secondary-fixed-dim": "#60d4ff",
+              "tertiary-fixed-dim": "#ffb3b1",
+              "primary-fixed": "#e9ddff",
+              "on-error": "#690005",
+              "surface-tint": "#d0bcff",
+              "on-secondary": "#003545",
+              "error-container": "#93000a",
+              "on-tertiary-fixed": "#410007",
+              "surface-variant": "#353534",
+              "error": "#ffb4ab",
+              "inverse-primary": "#6d3bd7",
+              "outline-variant": "#494454",
+              "on-error-container": "#ffdad6",
+              "on-primary": "#3c0091",
+              "secondary-fixed": "#bbe9ff"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"],
+              "mono": ["JetBrains Mono"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layering {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- Sidebar Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-zinc-900/80 backdrop-blur-lg flex flex-col h-full p-4 border-r border-white/5 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">hub</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-white tracking-tight">Cryptweb Curator</h1>
+<p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Verified Peer</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation items from JSON -->
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="grid_view">grid_view</span>
+<span class="font-['Inter'] text-sm font-medium">Dashboard</span>
+</a>
+<a class="bg-violet-500/10 text-violet-300 rounded-xl px-4 py-3 flex items-center gap-3 active:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="swap_vert">swap_vert</span>
+<span class="font-['Inter'] text-sm font-medium">Transfers</span>
+</a>
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="hub">hub</span>
+<span class="font-['Inter'] text-sm font-medium">Network</span>
+</a>
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 pt-4 border-t border-white/5">
+<button class="w-full mb-6 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold py-3 rounded-xl shadow-lg shadow-primary/10 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">add</span>
+<span>Share New File</span>
+</button>
+<a class="text-zinc-500 px-4 py-2 flex items-center gap-3 hover:text-zinc-300 text-xs transition-colors" href="#">
+<span class="material-symbols-outlined text-base" data-icon="menu_book">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="text-zinc-500 px-4 py-2 flex items-center gap-3 hover:text-zinc-300 text-xs transition-colors" href="#">
+<span class="material-symbols-outlined text-base" data-icon="help_outline">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8 lg:p-12">
+<!-- Header Section -->
+<header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<nav class="flex items-center gap-2 text-outline text-xs uppercase tracking-[0.2em] font-semibold mb-4">
+<span>Cryptweb</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary">Transfer History</span>
+</nav>
+<h2 class="text-4xl font-extrabold tracking-tighter text-white">Transfers</h2>
+<p class="text-on-surface-variant max-w-lg">Monitor and manage your peer-to-peer file distributions across the decentralized network.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container-highest border-none rounded-lg pl-10 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Filter transfers..." type="text"/>
+</div>
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span>Filters</span>
+</button>
+</div>
+</header>
+<!-- Stats Bento Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="bg-surface-container p-6 rounded-xl tonal-layering border border-white/5">
+<p class="text-xs uppercase tracking-widest text-outline font-bold mb-4">Total Sent</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-black text-white">1.42</span>
+<span class="text-lg font-medium text-zinc-500">TB</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-secondary text-xs font-bold">
+<span class="material-symbols-outlined text-xs">trending_up</span>
+<span>12% from last month</span>
+</div>
+</div>
+<div class="bg-surface-container p-6 rounded-xl tonal-layering border border-white/5">
+<p class="text-xs uppercase tracking-widest text-outline font-bold mb-4">Active Nodes</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-black text-white">28</span>
+<span class="text-lg font-medium text-zinc-500">Peers</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-secondary text-xs font-bold">
+<div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(96,212,255,0.6)]"></div>
+<span>Global Coverage 94%</span>
+</div>
+</div>
+<div class="bg-surface-container p-6 rounded-xl tonal-layering border border-white/5">
+<p class="text-xs uppercase tracking-widest text-outline font-bold mb-4">Avg Speed</p>
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-black text-white">420</span>
+<span class="text-lg font-medium text-zinc-500">MB/s</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-primary text-xs font-bold">
+<span class="material-symbols-outlined text-xs">bolt</span>
+<span>Network Optimal</span>
+</div>
+</div>
+</div>
+<!-- Transfers Table Container -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-2xl shadow-black/40">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-white/5">
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest">
+<div class="flex items-center gap-1 cursor-pointer hover:text-white transition-colors">
+                                    ID
+                                    <span class="material-symbols-outlined text-xs">unfold_more</span>
+</div>
+</th>
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest">
+<div class="flex items-center gap-1 cursor-pointer hover:text-white transition-colors">
+                                    File Name
+                                    <span class="material-symbols-outlined text-xs">unfold_more</span>
+</div>
+</th>
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest">Size</th>
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest">Recipient</th>
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest">
+<div class="flex items-center gap-1 cursor-pointer hover:text-white transition-colors">
+                                    Date
+                                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+</div>
+</th>
+<th class="px-8 py-5 text-[11px] font-black text-outline uppercase tracking-widest text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<!-- Row 1 -->
+<tr class="group hover:bg-surface-bright transition-all duration-200 cursor-pointer">
+<td class="px-8 py-6 font-mono text-xs text-outline group-hover:text-primary transition-colors">#RL-8821</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center text-zinc-500">
+<span class="material-symbols-outlined text-lg">description</span>
+</div>
+<span class="text-sm font-semibold text-white tracking-tight">Q3_financial_report_v2.pdf</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">12.4 MB</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant font-medium">marcus.v@cryptweb.io</td>
+<td class="px-8 py-6 text-sm text-outline">Oct 24, 2024</td>
+<td class="px-8 py-6 text-right">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[11px] font-bold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+                                    Complete
+                                </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-surface-bright transition-all duration-200 cursor-pointer">
+<td class="px-8 py-6 font-mono text-xs text-outline group-hover:text-primary transition-colors">#RL-8794</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center text-zinc-500">
+<span class="material-symbols-outlined text-lg">movie</span>
+</div>
+<span class="text-sm font-semibold text-white tracking-tight">brand_reveal_4k.mp4</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">1.2 GB</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant font-medium">design-team@relay.net</td>
+<td class="px-8 py-6 text-sm text-outline">Oct 22, 2024</td>
+<td class="px-8 py-6 text-right">
+<div class="flex flex-col items-end gap-1">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
+                                        Transferring
+                                    </span>
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden mt-1">
+<div class="h-full bg-primary w-[64%] shadow-[0_0_8px_rgba(208,188,255,0.4)]"></div>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-surface-bright transition-all duration-200 cursor-pointer">
+<td class="px-8 py-6 font-mono text-xs text-outline group-hover:text-primary transition-colors">#RL-8711</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center text-zinc-500">
+<span class="material-symbols-outlined text-lg">folder_zip</span>
+</div>
+<span class="text-sm font-semibold text-white tracking-tight">source_assets_v9.zip</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">440.1 MB</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant font-medium">external-audit@pwc.com</td>
+<td class="px-8 py-6 text-sm text-outline">Oct 19, 2024</td>
+<td class="px-8 py-6 text-right">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-[11px] font-bold uppercase tracking-wider">
+                                    Complete
+                                </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-surface-bright transition-all duration-200 cursor-pointer">
+<td class="px-8 py-6 font-mono text-xs text-outline group-hover:text-primary transition-colors">#RL-8602</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-zinc-800 flex items-center justify-center text-zinc-500">
+<span class="material-symbols-outlined text-lg">image</span>
+</div>
+<span class="text-sm font-semibold text-white tracking-tight">hero_background_raw.tiff</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">88.5 MB</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant font-medium">dev@relaysystems.io</td>
+<td class="px-8 py-6 text-sm text-outline">Oct 15, 2024</td>
+<td class="px-8 py-6 text-right">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error/10 text-error text-[11px] font-bold uppercase tracking-wider">
+                                    Failed
+                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Shell -->
+<div class="bg-surface-container-low px-8 py-5 border-t border-white/5 flex justify-between items-center">
+<p class="text-xs text-outline font-medium uppercase tracking-widest">Showing 4 of 128 transfers</p>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary text-on-primary text-xs font-bold shadow-sm">1</button>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-white/5 transition-colors text-xs font-bold">2</button>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-white/5 transition-colors text-xs font-bold">3</button>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State Preview (Hidden by default, shown for demonstration) -->
+<div class="hidden mt-12 bg-surface-container rounded-2xl border-2 border-dashed border-white/5 p-24 flex flex-col items-center text-center">
+<div class="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-4xl text-zinc-600">cloud_off</span>
+</div>
+<h3 class="text-2xl font-bold text-white mb-2">No transfers detected</h3>
+<p class="text-on-surface-variant max-w-sm mb-8">You haven't initiated any file transfers yet. Your activity history will appear here once you share your first artifact.</p>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all">
+                Initiate First Transfer
+            </button>
+</div>
+</main>
+<!-- Global Footer -->
+<footer class="ml-64 w-full py-12 px-8 bg-[#0E0E0E] border-t border-white/5">
+<div class="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto">
+<div class="mb-6 md:mb-0">
+<span class="text-white font-bold">Cryptweb P2P</span>
+<span class="mx-4 text-zinc-800">|</span>
+<span class="font-['Inter'] text-xs uppercase tracking-widest text-zinc-600">© 2024 Relay P2P. The Digital Curator.</span>
+</div>
+<div class="flex gap-8">
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-zinc-600 hover:text-violet-400 transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-zinc-600 hover:text-violet-400 transition-colors" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-zinc-600 hover:text-violet-400 transition-colors" href="#">Security Audit</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-zinc-600 hover:text-violet-400 transition-colors" href="#">GitHub</a>
+</div>
+</div>
+</footer>
+</body></html>

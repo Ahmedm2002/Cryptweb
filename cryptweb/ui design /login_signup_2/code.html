@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cryptweb | Authentication</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary-fixed": "#23005c",
+                        "surface-container": "#201f1f",
+                        "on-background": "#e5e2e1",
+                        "background": "#131313",
+                        "secondary": "#60d4ff",
+                        "on-tertiary-fixed-variant": "#82262a",
+                        "outline": "#958ea0",
+                        "inverse-on-surface": "#313030",
+                        "primary": "#d0bcff",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#004d63",
+                        "secondary-container": "#00a0c9",
+                        "primary-fixed-dim": "#d0bcff",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#e16d6e",
+                        "on-tertiary": "#630e16",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary-container": "#590510",
+                        "tertiary": "#ffb3b1",
+                        "tertiary-fixed": "#ffdad8",
+                        "primary-container": "#a078ff",
+                        "surface-bright": "#3a3939",
+                        "on-secondary-fixed": "#001f29",
+                        "on-primary-container": "#340080",
+                        "surface-container-low": "#1c1b1b",
+                        "on-secondary-container": "#00313f",
+                        "surface-container-highest": "#353534",
+                        "secondary-fixed-dim": "#60d4ff",
+                        "tertiary-fixed-dim": "#ffb3b1",
+                        "primary-fixed": "#e9ddff",
+                        "on-error": "#690005",
+                        "surface-tint": "#d0bcff",
+                        "on-secondary": "#003545",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#410007",
+                        "surface-variant": "#353534",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#6d3bd7",
+                        "outline-variant": "#494454",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#3c0091",
+                        "secondary-fixed": "#bbe9ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(32, 31, 31, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .tonal-border {
+            border: 1px solid rgba(73, 68, 84, 0.15);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #d0bcff 0%, #a078ff 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary/30 selection:text-primary min-h-screen flex flex-col items-center justify-center overflow-hidden">
+<!-- Ambient Background Blobs -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[5%] -right-[5%] w-[30%] h-[30%] bg-secondary/5 rounded-full blur-[100px]"></div>
+</div>
+<!-- Main Auth Container -->
+<main class="relative z-10 w-full max-w-[440px] px-6">
+<!-- Branding Anchor -->
+<div class="flex flex-col items-center mb-10 text-center">
+<div class="w-12 h-12 mb-4 primary-gradient rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-on-primary-container text-2xl font-bold" data-icon="hub">hub</span>
+</div>
+<h1 class="text-3xl font-black tracking-tighter text-white font-headline">Cryptweb</h1>
+<p class="text-zinc-500 text-sm mt-2 tracking-wide font-medium">THE DIGITAL CURATOR</p>
+</div>
+<!-- Auth Card -->
+<div class="glass-panel tonal-border rounded-xl p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+<!-- Form Header -->
+<div class="mb-8">
+<h2 class="text-xl font-bold text-white mb-1">Welcome back</h2>
+<p class="text-on-surface-variant text-sm">Enter your credentials to access the peer network.</p>
+</div>
+<!-- Social Login -->
+<button class="w-full flex items-center justify-center gap-3 bg-surface-container-highest hover:bg-surface-bright transition-all duration-300 py-3 px-4 rounded-lg text-sm font-medium tonal-border mb-6 group">
+<svg class="w-5 h-5 group-hover:scale-110 transition-transform" viewbox="0 0 24 24">
+<path d="M12 5.04c1.94 0 3.51.68 4.75 1.74l3.55-3.55C18.1 1.21 15.24 0 12 0 7.31 0 3.25 2.67 1.15 6.61l4.13 3.2C6.22 7.02 8.87 5.04 12 5.04z" fill="#EA4335"></path>
+<path d="M23.49 12.27c0-.8-.07-1.56-.19-2.27H12v4.51h6.47c-.28 1.48-1.13 2.74-2.4 3.58l3.74 2.91c2.18-2.02 3.48-5 3.48-8.73z" fill="#4285F4"></path>
+<path d="M5.28 14.19c-.24-.72-.37-1.49-.37-2.19 0-.71.13-1.47.37-2.19L1.15 6.61C.42 8.23 0 10.06 0 12s.42 3.77 1.15 5.39l4.13-3.2z" fill="#FBBC05"></path>
+<path d="M12 24c3.24 0 5.97-1.07 7.96-2.91l-3.74-2.91c-1.1.74-2.51 1.18-4.22 1.18-3.13 0-5.78-2.08-6.73-4.88l-4.13 3.2C3.25 21.33 7.31 24 12 24z" fill="#34A853"></path>
+</svg>
+                Continue with Google
+            </button>
+<!-- Divider -->
+<div class="relative flex items-center mb-6">
+<div class="flex-grow border-t border-white/5"></div>
+<span class="flex-shrink mx-4 text-[10px] uppercase tracking-widest text-zinc-600 font-bold">OR EMAIL</span>
+<div class="flex-grow border-t border-white/5"></div>
+</div>
+<!-- Credentials Form -->
+<form class="space-y-5">
+<div>
+<label class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2 ml-1" for="email">Email Address</label>
+<input class="w-full bg-surface-container-lowest border-0 rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-1 focus:ring-primary/50 placeholder:text-zinc-700 transition-all outline-none" id="email" placeholder="curator@relay.p2p" type="email"/>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2 ml-1">
+<label class="block text-xs font-bold uppercase tracking-widest text-zinc-500" for="password">Password</label>
+<a class="text-[11px] font-bold text-primary hover:text-white transition-colors uppercase tracking-tighter" href="#">Forgot?</a>
+</div>
+<input class="w-full bg-surface-container-lowest border-0 rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-1 focus:ring-primary/50 placeholder:text-zinc-700 transition-all outline-none" id="password" placeholder="••••••••" type="password"/>
+</div>
+<div class="pt-2">
+<button class="w-full primary-gradient text-on-primary-container font-bold py-3.5 rounded-lg text-sm shadow-lg shadow-primary/10 active:scale-[0.98] transition-all" type="submit">
+                        Sign In to Cryptweb
+                    </button>
+</div>
+</form>
+<!-- Footer Link -->
+<p class="mt-8 text-center text-zinc-500 text-sm">
+                New to the network? <a class="text-white font-semibold hover:text-primary transition-colors underline underline-offset-4 decoration-white/10" href="#">Create account</a>
+</p>
+</div>
+<!-- System Status Indicator (P2P Aesthetic) -->
+<div class="mt-12 flex items-center justify-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_#60d4ff]"></div>
+<span class="font-mono text-[10px] text-zinc-500 uppercase tracking-tighter">Cryptweb-Global: Online</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
+<span class="font-mono text-[10px] text-zinc-500 uppercase tracking-tighter">Latency: 24ms</span>
+</div>
+</div>
+</main>
+<!-- Visual Artifacts -->
+<div class="fixed bottom-12 left-12 hidden lg:block opacity-20 pointer-events-none">
+<div class="font-mono text-[10px] space-y-1">
+<p class="text-primary">ENCRYPTION_MODE: AES-256-GCM</p>
+<p class="text-zinc-500">PEER_ID: 8fb2...39a1</p>
+<p class="text-zinc-500">PROTOCOL: CRYPTWEB_V2_SECURE</p>
+</div>
+</div>
+<!-- Footer Copyright -->
+<footer class="fixed bottom-8 w-full px-8 text-center z-10">
+<p class="text-[10px] uppercase tracking-[0.3em] text-zinc-700 font-bold">
+            © 2024 Cryptweb P2P. The Digital Curator.
+        </p>
+</footer>
+<!-- Image for decorative context -->
+<div class="fixed inset-0 z-[-1] opacity-30">
+<img alt="macro abstract 3d rendering of crystal geometric formations with deep shadows and sharp violet highlights in a dark environment" class="w-full h-full object-cover mix-blend-overlay grayscale" data-alt="macro abstract 3d rendering of crystal geometric formations with deep shadows and sharp violet highlights in a dark environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvhKpo67HUMCdcVFFpRM8VyOLPKARkwU6hcuQmHNobwxT5m5SYm_UYpzl3pbFK139w78uG-TrHbG7aHL170sFRrGF7YyNjVjNyI3fhsf6nidc-oR2efklBRJv3RHwqptVCOEYq6-QKqNoLi_A6JkkhpEIlYjzdsXH2mHCVLpfodeuorrJLqu2W1IxfTa9eHGqrqe4VU1-Dy5Osix_8JxvFEpWbQ-To-IaBoqsmM1iPwSasdQvPVyAaUeCKQXiOX_ag-mgzmeE1hlk"/>
+</div>
+</body></html>

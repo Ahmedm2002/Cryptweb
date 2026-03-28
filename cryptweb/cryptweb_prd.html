@@ -1,0 +1,44 @@
+# Product Requirements Document: Cryptweb (Relay)
+
+## Project Overview
+A modern, minimal, production-ready web application UI for a WebRTC-based peer-to-peer file sharing platform named "Relay" (Project Name: Cryptweb).
+
+## Design Principles
+- **Style:** Clean, minimalistic, functional (Stripe/Eraser.io inspired).
+- **Theme:** Dark mode by default.
+- **Visuals:** Subtle glassmorphism, elegant typography (Inter/Geist), soft violet/blue accent.
+- **Layout:** Strong spacing, alignment, and visual hierarchy. Usability over decoration.
+
+## Core User Flows & Screens
+
+### 1. Landing Page
+- Hero: "Secure, instant file sharing. No uploads. No storage."
+- CTAs: "Get Started", "Login".
+- Features: P2P (no server storage), Privacy-focused, Real-time transfers, Future A/V calling.
+- Abstract illustration and minimal footer.
+
+### 2. Authentication
+- Login/Signup pages with Google integration.
+- Email verification UI.
+- Centered card layout with glass effect.
+- Smooth transitions (sliding animations).
+
+### 3. Home Dashboard (/home) - State-Driven UI
+A single-page interface with smooth transitions between these states:
+- **Connect:** Email input to find a peer.
+- **Connected:** Show peer info and status.
+- **File Sharing:** Drag & drop zone for files.
+- **Transfer:** Real-time progress bar and file info.
+- **Success/Failure:** Clear feedback based on transfer outcome.
+
+### 4. Transfers History
+- Table layout: ID, File Name, Size, Recipient, Date, Status.
+- Sorting, hover states, and empty states.
+
+### 5. Account Page
+- Profile info, verification status, and settings (Toggle for history, Logout).
+
+## Animations
+- Duration: 250–350ms, ease-in-out.
+- Slide animations between dashboard states.
+- Progress bar animations.

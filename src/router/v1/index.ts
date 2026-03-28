@@ -4,6 +4,7 @@ import verficationRoutes from "./verifyUser.routes.js";
 import sessionRoutes from "./userSessions.routes.js";
 import resetPassRoutes from "./resetPassword.routes.js";
 import healthRoutes from "./health.routes.js";
+import fileTransferRoutes from "./fileTransfers.routes.js";
 
 const router: Router = Router();
 
@@ -12,5 +13,6 @@ router.use("/v1/verify", verficationRoutes);
 router.use("/v1/user-session", sessionRoutes);
 router.use("/v1/password", resetPassRoutes);
 router.use("/v1/health", healthRoutes);
+router.use("/v1/file-transfers", fileTransferRoutes);
 
 export default router;

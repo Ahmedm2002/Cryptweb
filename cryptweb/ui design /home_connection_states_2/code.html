@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary-fixed": "#23005c",
+                        "surface-container": "#201f1f",
+                        "on-background": "#e5e2e1",
+                        "background": "#131313",
+                        "secondary": "#60d4ff",
+                        "on-tertiary-fixed-variant": "#82262a",
+                        "outline": "#958ea0",
+                        "inverse-on-surface": "#313030",
+                        "primary": "#d0bcff",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#004d63",
+                        "secondary-container": "#00a0c9",
+                        "primary-fixed-dim": "#d0bcff",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#e16d6e",
+                        "on-tertiary": "#630e16",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary-container": "#590510",
+                        "tertiary": "#ffb3b1",
+                        "tertiary-fixed": "#ffdad8",
+                        "primary-container": "#a078ff",
+                        "surface-bright": "#3a3939",
+                        "on-secondary-fixed": "#001f29",
+                        "on-primary-container": "#340080",
+                        "surface-container-low": "#1c1b1b",
+                        "on-secondary-container": "#00313f",
+                        "surface-container-highest": "#353534",
+                        "secondary-fixed-dim": "#60d4ff",
+                        "tertiary-fixed-dim": "#ffb3b1",
+                        "primary-fixed": "#e9ddff",
+                        "on-error": "#690005",
+                        "surface-tint": "#d0bcff",
+                        "on-secondary": "#003545",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#410007",
+                        "surface-variant": "#353534",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#6d3bd7",
+                        "outline-variant": "#494454",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#3c0091",
+                        "secondary-fixed": "#bbe9ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Custom Tonal Layering Shadows */
+        .tonal-elevation {
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+<!-- Sidebar Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-zinc-900/80 backdrop-blur-lg flex flex-col p-4 border-r border-white/5 z-40">
+<div class="mb-10 px-4">
+<h1 class="text-lg font-bold text-white tracking-tighter">Cryptweb Curator</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-medium">Verified Peer</p>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<!-- Active Tab: Dashboard -->
+<a class="bg-violet-500/10 text-violet-300 rounded-xl px-4 py-3 flex items-center gap-3 active:translate-x-1 transition-transform font-['Inter'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-violet-400 fill-icon">grid_view</span>
+<span>Dashboard</span>
+</a>
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 rounded-xl transition-all duration-200 active:translate-x-1 font-['Inter'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">swap_vert</span>
+<span>Transfers</span>
+</a>
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 rounded-xl transition-all duration-200 active:translate-x-1 font-['Inter'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Network</span>
+</a>
+<a class="text-zinc-500 px-4 py-3 flex items-center gap-3 hover:text-zinc-300 hover:bg-white/5 rounded-xl transition-all duration-200 active:translate-x-1 font-['Inter'] text-sm font-medium" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-white/5 pt-6 flex flex-col gap-1">
+<button class="mb-4 bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm">add</span>
+<span>Share New File</span>
+</button>
+<a class="text-zinc-600 px-4 py-2 flex items-center gap-3 hover:text-violet-400 text-[11px] uppercase tracking-widest transition-colors font-['Inter']" href="#">
+<span class="material-symbols-outlined text-sm">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="text-zinc-600 px-4 py-2 flex items-center gap-3 hover:text-violet-400 text-[11px] uppercase tracking-widest transition-colors font-['Inter']" href="#">
+<span class="material-symbols-outlined text-sm">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen relative flex items-center justify-center overflow-hidden">
+<!-- Ambient Decorative Background -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-5%] right-[10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px]"></div>
+</div>
+<div class="w-full max-w-4xl px-8 z-10 flex flex-col items-center">
+<!-- Connection States Hub -->
+<div class="w-full max-w-md">
+<!-- Header Stats (Asymmetric layout hint) -->
+<div class="flex justify-between items-end mb-8 w-full">
+<div class="space-y-1">
+<span class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-bold">Cryptweb Protocol v4.0</span>
+<h2 class="text-4xl font-black tracking-tighter text-white">Connect Peer</h2>
+</div>
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full shadow-[0_0_8px_rgba(96,212,255,0.6)]"></span>
+<span class="text-[10px] font-mono font-medium text-secondary">PEER_READY</span>
+</div>
+</div>
+</div>
+<!-- State A: Connect Card -->
+<div class="bg-surface-container-low p-8 rounded-[2rem] tonal-elevation relative group overflow-hidden border border-white/5">
+<div class="absolute top-0 right-0 p-6 opacity-20">
+<span class="material-symbols-outlined text-6xl text-white">api</span>
+</div>
+<div class="relative z-10">
+<div class="mb-8">
+<label class="label-md block mb-3 text-on-surface-variant font-medium text-xs uppercase tracking-widest">Entry Identifier</label>
+<input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 text-on-surface placeholder:text-zinc-600 focus:ring-2 focus:ring-primary/40 focus:bg-surface-bright transition-all duration-300 font-mono text-sm" placeholder="curator@relay.p2p" type="email"/>
+</div>
+<div class="space-y-4">
+<button class="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold tracking-tight text-base hover:shadow-[0_0_20px_rgba(208,188,255,0.3)] transition-all duration-300 active:scale-[0.98]">
+                                Establish Connection
+                            </button>
+<div class="flex items-center justify-between pt-2">
+<span class="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Node Status</span>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 opacity-40">
+<span class="w-1.5 h-1.5 bg-outline rounded-full"></span>
+<span class="text-[10px] font-bold text-outline">OFFLINE</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full shadow-[0_0_6px_rgba(96,212,255,0.5)]"></span>
+<span class="text-[10px] font-bold text-secondary">ONLINE</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento-style Metadata Display -->
+<div class="grid grid-cols-2 gap-4 mt-4">
+<div class="bg-surface-container-lowest p-4 rounded-2xl border border-white/5">
+<p class="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Encrypted Tunnel</p>
+<p class="text-xs font-mono text-violet-300/80">AES-256-GCM</p>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-2xl border border-white/5">
+<p class="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">Peer Discovery</p>
+<p class="text-xs font-mono text-secondary/80">Active DHT</p>
+</div>
+</div>
+</div>
+<!-- Contextual Information (Editorial Feel) -->
+<div class="mt-16 text-center max-w-lg">
+<p class="text-zinc-500 text-sm leading-relaxed">
+                    Relay uses a decentralized peer-to-peer architecture to ensure your artifacts remain private. Connections are end-to-end encrypted and verified via cryptographic signatures.
+                </p>
+<div class="mt-6 flex justify-center gap-8">
+<div class="flex flex-col">
+<span class="text-2xl font-bold text-white tracking-tighter">1.2ms</span>
+<span class="text-[10px] text-zinc-600 uppercase tracking-widest">Latency</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-bold text-white tracking-tighter">99.9%</span>
+<span class="text-[10px] text-zinc-600 uppercase tracking-widest">Uptime</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-bold text-white tracking-tighter">∞</span>
+<span class="text-[10px] text-zinc-600 uppercase tracking-widest">Bandwidth</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Shell -->
+<footer class="ml-64 bg-[#0E0E0E] py-12 px-8 border-t border-white/5">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+<div class="mb-6 md:mb-0">
+<span class="text-white font-bold tracking-tight">Cryptweb P2P</span>
+<span class="mx-2 text-zinc-800">|</span>
+<span class="text-zinc-600 text-[10px] uppercase tracking-widest">The Digital Curator</span>
+</div>
+<div class="flex gap-8">
+<a class="text-zinc-600 text-[10px] uppercase tracking-widest hover:text-violet-400 transition-colors" href="#">Privacy Policy</a>
+<a class="text-zinc-600 text-[10px] uppercase tracking-widest hover:text-violet-400 transition-colors" href="#">Terms of Service</a>
+<a class="text-zinc-600 text-[10px] uppercase tracking-widest hover:text-violet-400 transition-colors" href="#">Security Audit</a>
+<a class="text-zinc-600 text-[10px] uppercase tracking-widest hover:text-violet-400 transition-colors" href="#">GitHub</a>
+</div>
+<div class="mt-6 md:mt-0 text-zinc-700 text-[10px] font-mono">© 2024 Cryptweb P2P. ALL RIGHTS RESERVED.</div>
+</div>
+</footer>
+<!-- Background Image Asset (Hidden element to carry data-alt) -->
+<div class="hidden">
+<img data-alt="ultra-minimalist dark technology background with abstract floating obsidian shards and soft violet neon light leaks" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyfjW7PdXxf7KYQjJ4acaLejCItHAU3fiAGcngzWOw2YuJvIH4W8_HZC1nsfANEHpKqyVkmG5PHa5Y_84JbV_ZAapZLDiXsFJF_NisJhdbFWJ0RPbeYGLv0uXdR9YenA43ChNNLMXWynvHZieS4vqyJFV2Z0AL_ehKDstHd5Mp9BB-t4KCQGlJ3ZfCyvmaUeoMs1Xsvd0f4uKfn2MivoM-mi3A08P0yAX7DSUtv83bpSBOaGgJyWvJj_TlIJrQCKJA5SCQa8geMUI"/>
+</div>
+</body></html>

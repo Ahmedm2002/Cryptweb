@@ -11,7 +11,7 @@ services:
     volumes:
       - data:/var/lib/postgresql/
     networks:
-      - cryptweb_backend
+      - cryptweb
   pgAdmin:
     image: dpage/pgadmin4
     container_name: db_admin
@@ -21,7 +21,7 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     networks:
-      - cryptweb_backend
+      - cryptweb
 
   backend:
     build: .
@@ -33,10 +33,20 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - cryptweb_backend
+      - cryptweb
+
+  # trun_server:
+  #   image: coturn/coturn
+  #   container_name: trun_server
+  #   ports:
+  #     - "3478:3478"
+  #     - "3478:3478/udp"
+  #     - "5349:5349"
+  #     - "5349:5349/udp"
+  #     - "49152-65535:49152-65535/udp"
 
 volumes:
   data:
 
 networks:
-  cryptweb_backend:
+  cryptweb:
