@@ -120,6 +120,9 @@ class AuthService {
     if (!name || !password || !email) {
       return new ApiError(400, "Missing input fields");
     }
+    if (password.length < 8) {
+      return new ApiError(400, "Password must be of length 8");
+    }
     try {
       const validate = signupSchema.safeParse({
         userName: name,
