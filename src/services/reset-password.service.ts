@@ -11,6 +11,7 @@ import {
   isTokenHashMatched,
 } from "../utils/helperFuncs/randomToken.js";
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import UserSession from "../repositories/user_session.repo.js";
 import logger from "../utils/logger/logger.js";
 class ResetPasswordService {
@@ -63,68 +64,58 @@ class ResetPasswordService {
    * @returns
    */
   async resetPassword(
-    email: string,
     password: string,
-    confirmPassword: string,
     token: string,
+    confirmPassword: string,
   ): Promise<ApiError | ApiResponse<null>> {
-    // get user generated reset password token from db
-    // check its usage
-    // check its expiry
-    // set used_at to ensure on-time usage
-    // invalidate all the previous sessions with old creds
-    // set the new password has in the users table for updated password
-    // redirect user to /login in frontend to login with new creds
-    if (!email || !password || !confirmPassword) {
-      return new ApiError(400, "Email and password required");
+    if (!password || !token || !confirmPassword) {
+      return new ApiError(400, "Token and password required");
     }
-    if (!isValidEmail(email)) {
-      return new ApiError(400, "Invalid email address");
+    if (password !== confirmPassword) {
+      return new ApiError(400, "Password does not matches");
     }
 
-    if (password !== confirmPassword) {
-      return new ApiError(400, "Password does not match");
-    }
     try {
       const isPasswordValid = passwordSchema.safeParse(password);
       if (!isPasswordValid.success) {
         throw new ApiError(400, "Invalid Password");
       }
-      const user = await Users.getByEmail(email);
-      if (!user) {
-        return new ApiResponse(
-          200,
-          null,
-          "If the email exists, a reset link has been sent.",
-        );
-      }
-      const resetToken = await resetPassRepo.getUserToken(user.id);
+
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+      const resetToken = await resetPassRepo.getTokenByHash(hashedToken);
+
       if (!resetToken) {
-        return new ApiError(404, "No active reset token found");
+        return new ApiError(404, "Invalid or no active reset token found");
       }
       if (resetToken.used_at) {
         return new ApiError(400, "Token already used");
       }
+
       const currentTimeMS = Date.now();
       const tokenExpiryTimeMS = new Date(resetToken.expires_at).getTime();
 
       if (currentTimeMS > tokenExpiryTimeMS) {
         return new ApiError(400, "Reset Token Expired");
       }
-      if (!isTokenHashMatched(token, resetToken.token_hash)) {
-        return new ApiError(400, "Invalid Token");
-      }
+
       const hashedPassword = await bcrypt.hash(password, 10);
-      const id = await Users.updatePassword(user.id, hashedPassword);
+      const id = await Users.updatePassword(resetToken.user_id, hashedPassword);
       if (!id) {
         return new ApiError(500, CONSTANTS.SERVER_ERROR);
       }
-      await resetPassRepo.setTokenUsedAt(resetToken.id);
-      await UserSession.deleteAllSessions(user.id);
+
+      await resetPassRepo.setTokenUsedAt(resetToken.id!);
+      await UserSession.deleteAllSessions(resetToken.user_id);
+
+      await Users.setVerifiedState(resetToken.user_id);
+
       return new ApiResponse(
         200,
         null,
-        "Password reset successfull, Please Login again",
+        "Password reset successful, Please Login again",
       );
     } catch (error: any) {
       logger.error({ err: error }, "Reset password flow failed unexpectedly");

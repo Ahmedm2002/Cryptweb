@@ -4,4 +4,5 @@ export interface SafeUserDto {
   name: string;
   profile_picture?: string;
   created_on?: Date;
+  verified_at?: Date | null;
 }

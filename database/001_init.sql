@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens(
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens(
   id UUID PRIMARY KEY default gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   token_hash TEXT NOT NULL,

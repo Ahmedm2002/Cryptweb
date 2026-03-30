@@ -7,30 +7,25 @@ import helmet from "helmet";
 import logger from "./utils/logger/logger.js";
 import logRequest from "./middlewares/logger.middleware.js";
 import corsMiddleware from "./middlewares/cors.middleware.js";
+import cors from "cors";
 
 const apiVersion = process.env.API_VERSION;
 
 const app: Express = express();
 app.use(express.static("public/"));
 app.use(helmet());
-app.use(corsMiddleware);
+app.use(cors(corsMiddleware));
 
 transport.verify();
 app.use(express.json({ limit: "16kb" }));
 app.use(logRequest);
 app.use(`/api`, v1Router);
 
-app.get("/api/", (req, res) => {
+app.get("/api/", (_, res) => {
   logger.info("/GET successfull");
   return res
     .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { version: apiVersion },
-        "Welcome to auth service backend",
-      ),
-    );
+    .json(new ApiResponse(200, { version: apiVersion }, "Working fine."));
 });
 
 export { app };

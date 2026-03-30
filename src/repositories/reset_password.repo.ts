@@ -7,10 +7,16 @@ class ResetPasswordRepo {
   async insertToken(userId: string, tokenHash: string): Promise<string> {
     try {
       const response: QueryResult = await pool.query(
-        "Insert into password_reset_tokens (user_id, token_hash, expires_at) values ($1, $2, NOW() + INTERVAL '5 min') on conflict(user_id) do update set token_hash = $2, expires_at = NOW() + INTERVAL '5 min'  returning id",
+        `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+          VALUES ($1, $2, NOW() + INTERVAL '5 min')
+          ON CONFLICT (user_id)
+          DO UPDATE SET
+              token_hash = $2,
+              expires_at = NOW() + INTERVAL '5 min'
+          RETURNING *`,
         [userId, tokenHash],
       );
-      return response.rows[0];
+      return response.rows[0].id;
     } catch (error: any) {
       throw new Error(
         "Error inserting token for password recovery token table",
@@ -36,12 +42,29 @@ class ResetPasswordRepo {
   async getUserToken(userId: string): Promise<PasswordResetI> {
     try {
       const response: QueryResult = await pool.query(
-        "Select token_hash, used_at, expires_at, user_id from password_reset_tokens where user_id = $1",
+        "Select id, token_hash, used_at, expires_at, user_id from password_reset_tokens where user_id = $1",
         [userId],
       );
       return response.rows[0];
     } catch (error) {
       throw new Error("Error retrieving user password recovery token");
+    }
+  }
+
+  /**
+   *
+   * @param tokenHash
+   * @returns
+   */
+  async getTokenByHash(tokenHash: string): Promise<PasswordResetI> {
+    try {
+      const response: QueryResult = await pool.query(
+        "Select id, token_hash, used_at, expires_at, user_id from password_reset_tokens where token_hash = $1",
+        [tokenHash],
+      );
+      return response.rows[0];
+    } catch (error) {
+      throw new Error("Error retrieving token by hash");
     }
   }
 }

@@ -8,6 +8,7 @@ function safeUserParse(user: userI): SafeUserDto {
     name: user.name,
     profile_picture: user?.profile_picture ?? "",
     created_on: user?.created_on!,
+    verified_at: user?.verified_at ?? null,
   };
 }
 

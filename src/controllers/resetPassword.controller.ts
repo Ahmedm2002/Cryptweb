@@ -10,13 +10,12 @@ import logger from "../utils/logger/logger.js";
  * @param res
  */
 async function resetPassword(req: Request, res: Response) {
-  const { email, password, confirmPassword, token } = req.body;
+  const { password, token, confirmPassword } = req.body;
   try {
     const response = await resetPasswordServ.resetPassword(
-      email,
       password,
-      confirmPassword,
       token,
+      confirmPassword,
     );
     res.status(response.statusCode).json(response);
   } catch (error: any) {

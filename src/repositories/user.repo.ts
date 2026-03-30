@@ -146,6 +146,24 @@ class UsersRepo {
       client.release();
     }
   }
+
+  /**
+   *
+   * @param userId
+   */
+  async setVerifiedState(userId: string): Promise<void> {
+    try {
+      await pool.query(
+        `UPDATE users
+         SET verified_at = now()
+         WHERE id = $1
+         AND verified_at is NULL`,
+        [userId],
+      );
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to set user verified state");
+    }
+  }
 }
 
 const Users = new UsersRepo();
