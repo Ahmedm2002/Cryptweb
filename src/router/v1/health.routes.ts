@@ -4,6 +4,6 @@ import rateLimiter from "../../middlewares/rateLimitter.middleware.js";
 
 const router: Router = Router();
 
-router.get("/", rateLimiter.healthLimiter, healthCheck);
+router.get("/", rateLimiter.generalLimiter, healthCheck);
 
 export default router;

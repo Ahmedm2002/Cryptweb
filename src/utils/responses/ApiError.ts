@@ -13,6 +13,13 @@ class ApiError extends Error {
   success: boolean;
   errors: any;
 
+  /**
+   *
+   * @param statusCode
+   * @param message
+   * @param errors
+   * @param stack
+   */
   constructor(statusCode: number, message: string, errors?: any, stack?: any) {
     super();
     this.statusCode = statusCode;

@@ -6,7 +6,10 @@ import resetPassRoutes from "./resetPassword.routes.js";
 import healthRoutes from "./health.routes.js";
 import fileTransferRoutes from "./fileTransfers.routes.js";
 
-const router: Router = Router();
+const router: Router = Router({
+  strict: true,
+  caseSensitive: true,
+});
 
 router.use("/v1/auth", authRoutes);
 router.use("/v1/verify", verficationRoutes);

@@ -162,6 +162,18 @@ class AuthService {
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }
+
+  /**
+   *
+   * @param token
+   */
+  async googleLogin(token: string) {
+    try {
+      return new ApiResponse(200, "User created");
+    } catch (error) {
+      return new ApiError(500, CONSTANTS.SERVER_ERROR);
+    }
+  }
 }
 
 const authServ = new AuthService();

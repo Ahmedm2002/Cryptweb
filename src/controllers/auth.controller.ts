@@ -45,4 +45,14 @@ async function signupUser(req: Request, res: Response): Promise<Response> {
   }
 }
 
-export { loginUser, signupUser };
+async function googleLogin(req: Request, res: Response): Promise<Response> {
+  const { token } = req.body;
+  try {
+    const response = await authServ.googleLogin(token);
+    return res.status(response.statusCode).json(response);
+  } catch (error: any) {
+    logger.error({ err: error }, "Signup failed unexpectedly");
+    return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
+  }
+}
+export { loginUser, signupUser, googleLogin };

@@ -10,20 +10,6 @@ class RateLimiter {
     legacyHeaders: false,
   });
 
-  signupLimiter = rateLimit({
-    windowMs: 10 * 60 * 60 * 1000,
-    max: 20,
-    message: "Too many accounts created, please try again later",
-  });
-
-  healthLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: "Too many health check requests, please try again later",
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
   generalLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     max: 100,
