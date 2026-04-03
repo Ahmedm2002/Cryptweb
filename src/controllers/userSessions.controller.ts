@@ -3,6 +3,7 @@ import ApiError from "../utils/responses/ApiError.js";
 import CONSTANTS from "../constants.js";
 import userSessionServ from "../services/user-session.service.js";
 import tokensServ from "../services/tokens.service.js";
+import UserSession from "../repositories/user_session.repo.js";
 import logger from "../utils/logger/logger.js";
 import type CustomRequest from "../types/customReq.type.js";
 /**
@@ -74,4 +75,44 @@ async function getAccessToken(req: Request, res: Response) {
   }
 }
 
-export { getAllSessions, invalidateSession, getAccessToken, logOutAllDevices };
+async function getCurrentSession(req: CustomRequest, res: Response) {
+  try {
+    const user = req?.user;
+    if (!user) {
+      return res.status(401).json(new ApiError(401, "Unauthorized"));
+    }
+
+    const deviceId = req.cookies?.deviceId;
+    const accessToken = req.cookies?.accessToken;
+    const sessionId = req.cookies?.sessionId;
+
+    if (!sessionId) {
+      return res.status(400).json(new ApiError(400, "Session ID cookie missing"));
+    }
+
+    const sessionData = await UserSession.getSession(user.id, sessionId);
+    if (!sessionData) {
+      return res.status(404).json(new ApiError(404, "Session not found"));
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      data: {
+        user,
+        session: sessionData,
+        deviceInfo: {
+          deviceId,
+          accessToken,
+          sessionId,
+        }
+      },
+      message: "Current session retrieved successfully",
+      success: true,
+    });
+  } catch (error: any) {
+    logger.error({ err: error }, "Failed to get current session");
+    return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
+  }
+}
+
+export { getAllSessions, invalidateSession, getAccessToken, logOutAllDevices, getCurrentSession };

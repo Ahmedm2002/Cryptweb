@@ -21,6 +21,7 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
       .cookie("accessToken", response.data?.accessToken, CONSTANTS.cookieOpts)
       .cookie("refreshToken", response.data?.refreshToken, CONSTANTS.cookieOpts)
       .cookie("deviceId", response.data?.deviceId, CONSTANTS.cookieOpts)
+      .cookie("sessionId", response.data?.sessionId, CONSTANTS.cookieOpts)
       .json(response);
   } catch (error) {
     logger.error({ err: error }, "Login failed unexpectedly");

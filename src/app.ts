@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import cookieParser from "cookie-parser";
 import v1Router from "./router/v1/index.js";
 import ApiResponse from "./utils/responses/ApiResponse.js";
 import transport from "./configs/nodemailer.js";
@@ -12,6 +13,7 @@ import cors from "cors";
 const apiVersion = process.env.API_VERSION;
 
 const app: Express = express();
+app.use(cookieParser());
 app.use(express.static("public/"));
 app.use(helmet());
 app.use(cors(corsMiddleware));
