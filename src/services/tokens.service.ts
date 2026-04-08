@@ -39,9 +39,7 @@ class Tokens {
     if (!refreshToken || !userId || !deviceId || !sessionId) {
       return new ApiError(400, "Bad Request, Required fields are empty");
     }
-    if (!isValidUuid(userId)) {
-      return new ApiError(400, "Invalid user id");
-    }
+
     try {
       const user = await Users.getById(userId);
       if (!user) {
@@ -55,7 +53,7 @@ class Tokens {
       const currentTimeMS = Date.now();
       const tokenExpiryDateMS = new Date(session.expires_at!).getTime();
       if (currentTimeMS > tokenExpiryDateMS) {
-        return new ApiError(400, "Refresh token expired");
+        return new ApiError(403, "Refresh token expired");
       }
 
       const isValidToken = await bcrypt.compare(

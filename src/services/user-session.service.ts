@@ -5,6 +5,7 @@ import ApiError from "../utils/responses/ApiError.js";
 import ApiResponse from "../utils/responses/ApiResponse.js";
 import isValidUuid from "../utils/helperFuncs/isValidUuid.js";
 import logger from "../utils/logger/logger.js";
+import Users from "../repositories/user.repo.js";
 class UserSessionService {
   constructor() {}
   /**
@@ -28,7 +29,7 @@ class UserSessionService {
         "sessions fetched successfully",
       );
     } catch (error: any) {
-      logger.error({ err: error }, "Failed to fetch all sessions");
+      logger.fatal({ err: error }, "Failed to fetch all sessions");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }
@@ -52,7 +53,7 @@ class UserSessionService {
       }
       return new ApiResponse<string>(200, id, "Session deleted successfully");
     } catch (error: any) {
-      logger.error({ err: error }, "Failed to delete session");
+      logger.fatal({ err: error }, "Failed to delete session");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }
@@ -74,7 +75,38 @@ class UserSessionService {
         "Log out from all devices sucessfull",
       );
     } catch (error: any) {
-      logger.error({ err: error }, "Failed to delete all sessions");
+      logger.fatal({ err: error }, "Failed to delete all sessions");
+      return new ApiError(500, CONSTANTS.SERVER_ERROR);
+    }
+  }
+  async getCurrentSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<ApiError | ApiResponse<any>> {
+    if (!userId || !sessionId) {
+      return new ApiError(400, "Missing Fields");
+    }
+    if (!isValidUuid(userId) || !isValidUuid(sessionId)) {
+      return new ApiError(400, "Invalid id");
+    }
+
+    try {
+      const session = await UserSession.getSession(userId, sessionId);
+      if (!session) {
+        return new ApiError(404, "Session not found");
+      }
+      const user = await Users.getById(userId);
+      if (!user) {
+        return new ApiError(404, "User not found");
+      }
+
+      return new ApiResponse(
+        200,
+        { user, session },
+        "Session retrieved successfully",
+      );
+    } catch (error) {
+      logger.fatal({ err: error }, "Failed to get current user session");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }

@@ -1,7 +1,10 @@
 import type { QueryResult } from "pg";
 import { pool } from "../configs/db.js";
 import crypto from "node:crypto";
-import type { userSessionI, DeviceInfo } from "../interfaces/user-sessions.model.js";
+import type {
+  userSessionI,
+  DeviceInfo,
+} from "../interfaces/user-sessions.model.js";
 import logger from "../utils/logger/logger.js";
 /**
  *

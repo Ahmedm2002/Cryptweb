@@ -8,7 +8,6 @@ import helmet from "helmet";
 import logger from "./utils/logger/logger.js";
 import logRequest from "./middlewares/logger.middleware.js";
 import corsMiddleware from "./middlewares/cors.middleware.js";
-import cors from "cors";
 
 const apiVersion = process.env.API_VERSION;
 
@@ -16,7 +15,7 @@ const app: Express = express();
 app.use(cookieParser());
 app.use(express.static("public/"));
 app.use(helmet());
-app.use(cors(corsMiddleware));
+app.use(corsMiddleware);
 
 transport.verify();
 app.use(express.json({ limit: "16kb" }));
