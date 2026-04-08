@@ -16,13 +16,24 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
   try {
     const response = await authServ.login(email, password, userAgent);
 
-    return res
-      .status(response.statusCode)
-      .cookie("accessToken", response.data?.accessToken, CONSTANTS.cookieOpts)
-      .cookie("refreshToken", response.data?.refreshToken, CONSTANTS.cookieOpts)
-      .cookie("deviceId", response.data?.deviceId, CONSTANTS.cookieOpts)
-      .cookie("sessionId", response.data?.sessionId, CONSTANTS.cookieOpts)
-      .json(response);
+    if (response.success) {
+      return res
+        .status(response.statusCode)
+        .cookie(
+          "accessToken",
+          response.data?.accessToken,
+          CONSTANTS.authCookieOpts,
+        )
+        .cookie(
+          "refreshToken",
+          response.data?.refreshToken,
+          CONSTANTS.cookieOpts,
+        )
+        .cookie("deviceId", response.data?.deviceId, CONSTANTS.cookieOpts)
+        .cookie("sessionId", response.data?.sessionId, CONSTANTS.cookieOpts)
+        .json(response);
+    }
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error({ err: error }, "Login failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));

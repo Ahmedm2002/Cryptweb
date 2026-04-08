@@ -21,7 +21,10 @@ async function resendCode(req: Request, res: Response) {
     const response = await verifyUserServ.resendCode(email);
     res.status(response.statusCode).json(response);
   } catch (error: any) {
-    logger.error({ err: error }, "Resend verification code failed unexpectedly");
+    logger.error(
+      { err: error },
+      "Resend verification code failed unexpectedly",
+    );
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }
 }

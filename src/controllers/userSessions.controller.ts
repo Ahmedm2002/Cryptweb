@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import ApiError from "../utils/responses/ApiError.js";
 import CONSTANTS from "../constants.js";
 import userSessionServ from "../services/user-session.service.js";
@@ -6,6 +7,7 @@ import tokensServ from "../services/tokens.service.js";
 import UserSession from "../repositories/user_session.repo.js";
 import logger from "../utils/logger/logger.js";
 import type CustomRequest from "../types/customReq.type.js";
+import Users from "../repositories/user.repo.js";
 /**
  *
  * @param req
@@ -60,7 +62,31 @@ async function logOutAllDevices(req: CustomRequest, res: Response) {
 }
 
 async function getAccessToken(req: Request, res: Response) {
-  const { refreshToken, userId, deviceId, sessionId } = req.body;
+  const refreshToken = req.cookies?.refreshToken;
+  const deviceId = req.cookies?.deviceId;
+  const sessionId = req.cookies?.sessionId;
+
+  const authHeader = req.headers?.authorization;
+  const accessToken =
+    req.cookies?.accessToken || (authHeader ? authHeader.split(" ")[1] : null);
+
+  if (!refreshToken || !deviceId || !sessionId || !accessToken) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Missing required session parameters"));
+  }
+
+  let userId: string;
+  try {
+    const decoded = jwt.decode(accessToken) as jwt.JwtPayload;
+    if (!decoded || !decoded.sub) throw new Error("Invalid token");
+    userId = decoded.sub as string;
+  } catch (error) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "Invalid access token structure"));
+  }
+
   try {
     const response = await tokensServ.generateAccessToken(
       refreshToken,
@@ -68,6 +94,16 @@ async function getAccessToken(req: Request, res: Response) {
       deviceId,
       sessionId,
     );
+    if (response.success) {
+      return res
+        .status(response.statusCode)
+        .cookie(
+          "accessToken",
+          response.data?.accessToken,
+          CONSTANTS.authCookieOpts,
+        )
+        .json(response);
+    }
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.error({ err: error }, "Failed to generate access token");
@@ -87,10 +123,13 @@ async function getCurrentSession(req: CustomRequest, res: Response) {
     const sessionId = req.cookies?.sessionId;
 
     if (!sessionId) {
-      return res.status(400).json(new ApiError(400, "Session ID cookie missing"));
+      return res
+        .status(400)
+        .json(new ApiError(400, "Session ID cookie missing"));
     }
 
     const sessionData = await UserSession.getSession(user.id, sessionId);
+    const userInfo = await Users.getById(user.id);
     if (!sessionData) {
       return res.status(404).json(new ApiError(404, "Session not found"));
     }
@@ -98,15 +137,15 @@ async function getCurrentSession(req: CustomRequest, res: Response) {
     return res.status(200).json({
       statusCode: 200,
       data: {
-        user,
+        user: userInfo,
         session: sessionData,
         deviceInfo: {
           deviceId,
           accessToken,
           sessionId,
-        }
+        },
       },
-      message: "Current session retrieved successfully",
+      message: "Session retrieved successfully",
       success: true,
     });
   } catch (error: any) {
@@ -115,4 +154,10 @@ async function getCurrentSession(req: CustomRequest, res: Response) {
   }
 }
 
-export { getAllSessions, invalidateSession, getAccessToken, logOutAllDevices, getCurrentSession };
+export {
+  getAllSessions,
+  invalidateSession,
+  getAccessToken,
+  logOutAllDevices,
+  getCurrentSession,
+};

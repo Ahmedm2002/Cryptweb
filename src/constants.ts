@@ -1,17 +1,18 @@
-type CONSTS = {
-  SERVER_ERROR: string;
-  cookieOpts: {
-    httpOnly: boolean;
-    secure: boolean;
-  };
-  OTP_EXPIRY_MS: number;
-};
+import type { CONSTS } from "./types/constants.type.js";
 
 const CONSTANTS: CONSTS = {
   SERVER_ERROR: "Something went wrong at our end. Please Try again later",
   cookieOpts: {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    sameSite: "lax",
+  },
+  authCookieOpts: {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    sameSite: "lax",
   },
   OTP_EXPIRY_MS: 300000,
 };

@@ -10,11 +10,11 @@ import ApiError from "../utils/responses/ApiError.js";
  */
 const healthCheck = async (req: Request, res: Response) => {
   const result = await healthServ.serverHealth();
-  
+
   if (result instanceof ApiError) {
     return res.status(result.statusCode).json(result);
   }
-  
+
   return res.status(result.statusCode).json(result);
 };
 
