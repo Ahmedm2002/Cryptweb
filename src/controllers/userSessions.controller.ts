@@ -14,8 +14,8 @@ import Users from "../repositories/user.repo.js";
  * @param res
  * @returns
  */
-async function getAllSessions(req: Request, res: Response) {
-  const userId = req.query.userId as string;
+async function getAllSessions(req: CustomRequest, res: Response) {
+  const userId = req.user?.id as string;
   try {
     const response = await userSessionServ.getAllSessions(userId);
     res.status(response.statusCode).json(response);

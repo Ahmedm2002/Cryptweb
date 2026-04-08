@@ -12,6 +12,8 @@ class ResetPasswordRepo {
           ON CONFLICT (user_id)
           DO UPDATE SET
               token_hash = $2,
+              created_at = NOW(),
+              revoked_at = NOW(),
               expires_at = NOW() + INTERVAL '5 min'
           RETURNING *`,
         [userId, tokenHash],
