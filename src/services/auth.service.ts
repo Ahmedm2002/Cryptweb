@@ -61,7 +61,10 @@ class AuthService {
 
       const deviceId: string = crypto.randomBytes(10).toString("hex");
 
-      const { accessToken, refreshToken }: Tokens = generateTokens(user.id!);
+      const { accessToken, refreshToken }: Tokens = generateTokens(
+        user.id!,
+        deviceId,
+      );
 
       const parser = new UAParser(userAgent);
       const deviceInfo: DeviceInfo = {
@@ -94,7 +97,6 @@ class AuthService {
           user: parsedUser,
           accessToken,
           refreshToken,
-          deviceId,
           sessionId: sessionId.id!,
         },
         "logged in successfully",

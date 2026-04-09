@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import server from "./components/singalling.js";
+import httpServer from "./components/singalling.js";
 import { pool } from "./configs/db.js";
 import logger from "./utils/logger/logger.js";
 
@@ -9,7 +9,7 @@ dotenv.config({
 pool
   .connect()
   .then(() => {
-    server.listen(process.env.PORT || 3000, () => {
+    httpServer.listen(process.env.PORT || 3000, () => {
       logger.info({ port: process.env.PORT || 3000 }, "Server started");
     });
   })

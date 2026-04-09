@@ -5,7 +5,6 @@ export interface LoginResDto {
   user: SafeUserDto;
   accessToken: string;
   refreshToken: string;
-  deviceId: string;
   sessionId: string;
 }
 

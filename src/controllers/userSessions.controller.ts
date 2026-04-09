@@ -4,6 +4,7 @@ import CONSTANTS from "../constants.js";
 import userSessionServ from "../services/user-session.service.js";
 import logger from "../utils/logger/logger.js";
 import type CustomRequest from "../types/customReq.type.js";
+import tokensServ from "../services/tokens.service.js";
 /**
  *
  * @param req
@@ -71,11 +72,25 @@ async function logOutAllDevices(req: CustomRequest, res: Response) {
  */
 async function getAccessToken(req: Request, res: Response) {
   const refreshToken = req.cookies?.refreshToken;
-  const deviceId = req.cookies?.deviceId;
   const sessionId = req.cookies?.sessionId;
 
   try {
-    return res.json({ message: "hello world" });
+    const response = await tokensServ.generateAccessToken(
+      refreshToken,
+      sessionId,
+    );
+    if (response.success) {
+      return res
+        .status(response.statusCode)
+        .cookie(
+          "accessToken",
+          response.data?.accessToken,
+          CONSTANTS.authCookieOpts,
+        )
+        .json(response);
+    }
+
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.fatal(
       { err: error },
@@ -83,35 +98,6 @@ async function getAccessToken(req: Request, res: Response) {
     );
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }
-
-  // if (!refreshToken || !deviceId || !sessionId) {
-  //   return res
-  //     .status(400)
-  //     .json(new ApiError(400, "Missing required session parameters"));
-  // }
-
-  // try {
-  //   const response = await tokensServ.generateAccessToken(
-  //     refreshToken,
-  //     userId,
-  //     deviceId,
-  //     sessionId,
-  //   );
-  //   if (response.success) {
-  //     return res
-  //       .status(response.statusCode)
-  //       .cookie(
-  //         "accessToken",
-  //         response.data?.accessToken,
-  //         CONSTANTS.authCookieOpts,
-  //       )
-  //       .json(response);
-  //   }
-  //   return res.status(response.statusCode).json(response);
-  // } catch (error: any) {
-  //   logger.error({ err: error }, "Failed to generate access token");
-  //   return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
-  // }
 }
 
 /**

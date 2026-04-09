@@ -5,6 +5,7 @@ import ApiError from "../utils/responses/ApiError.js";
 import ApiResponse from "../utils/responses/ApiResponse.js";
 import UserSession from "../repositories/user_session.repo.js";
 import bcrypt from "bcrypt";
+import decodeRefreshToken from "../utils/jwt/decoder.js";
 import { generateAccessToken } from "../utils/jwt/generateTokens.js";
 import logger from "../utils/logger/logger.js";
 
@@ -21,8 +22,6 @@ class Tokens {
    */
   async generateAccessToken(
     refreshToken: string,
-    userId: string,
-    deviceId: string,
     sessionId: string,
   ): Promise<ApiError | ApiResponse<AccessToken>> {
     // Implemented
@@ -36,11 +35,12 @@ class Tokens {
     // generate new access token
     // send new access token to user
 
-    if (!refreshToken || !userId || !deviceId || !sessionId) {
+    if (!refreshToken || !sessionId) {
       return new ApiError(400, "Bad Request, Required fields are empty");
     }
 
     try {
+      const userId = decodeRefreshToken(refreshToken);
       const user = await Users.getById(userId);
       if (!user) {
         return new ApiError(404, "User not found");

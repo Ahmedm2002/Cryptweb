@@ -6,7 +6,7 @@ import type { Tokens } from "../../interfaces/tokens.model.js";
  * @param userId
  * @returns
  */
-function generateTokens(userId: string): Tokens {
+function generateTokens(userId: string, deviceId: string): Tokens {
   if (!userId) {
     throw new Error("User id required");
   }

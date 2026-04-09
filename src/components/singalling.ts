@@ -2,7 +2,6 @@ import { app } from "../app.js";
 import { Server, Socket } from "socket.io";
 import logger from "../utils/logger/logger.js";
 import { createServer } from "node:http";
-import jwt from "jsonwebtoken";
 import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
@@ -10,36 +9,22 @@ import type {
   WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
-
-const server = createServer(app);
-const io = new Server(server);
+import dotenv from "dotenv";
+dotenv.config();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.ALLOWED_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
+  transports: ["websocket"],
+});
 
 const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
 const activePeers: Map<string, string> = new Map();
-
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token;
-  if (!token) {
-    logger.warn(
-      { socketId: socket.id },
-      "Socket connection rejected: no token",
-    );
-    return next(new Error("Authentication required"));
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
-    (socket as any).userId = decoded.sub as string;
-    next();
-  } catch (err) {
-    logger.warn(
-      { socketId: socket.id },
-      "Socket connection rejected: invalid token",
-    );
-    return next(new Error("Invalid or expired token"));
-  }
-});
 
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
@@ -67,6 +52,34 @@ io.on("connection", (socket: Socket) => {
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
       socket.emit("registration-error", { message: "Internal server error" });
+    }
+  });
+
+  socket.on("check-status", (data: { email: string }) => {
+    logger.info(
+      { socketId: socket.id, targetEmail: data.email },
+      "Received check-status request",
+    );
+    if (!data.email) return;
+    const targetUser = emailToSocketMap.get(data.email);
+    if (targetUser) {
+      logger.info(
+        { socketId: socket.id, targetEmail: data.email },
+        "Target user is online, emitting status-update true",
+      );
+      socket.emit("status-update", {
+        isOnline: true,
+        message: "User is online",
+      });
+    } else {
+      logger.info(
+        { socketId: socket.id, targetEmail: data.email },
+        "Target user is offline, emitting status-update false",
+      );
+      socket.emit("status-update", {
+        isOnline: false,
+        message: "User is offline",
+      });
     }
   });
 
@@ -136,7 +149,7 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-export default server;
+export default httpServer;
 
 function removeEmailFromMap(id: string) {
   if (!id) return;
