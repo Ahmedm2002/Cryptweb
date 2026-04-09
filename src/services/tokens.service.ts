@@ -41,6 +41,9 @@ class Tokens {
 
     try {
       const userId = decodeRefreshToken(refreshToken);
+      if (!userId || typeof userId !== "string") {
+        return new ApiError(400, "Invalid user id");
+      }
       const user = await Users.getById(userId);
       if (!user) {
         return new ApiError(404, "User not found");

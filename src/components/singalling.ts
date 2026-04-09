@@ -69,6 +69,7 @@ io.on("connection", (socket: Socket) => {
       );
       socket.emit("status-update", {
         isOnline: true,
+        name: targetUser.name,
         message: "User is online",
       });
     } else {
@@ -118,6 +119,50 @@ io.on("connection", (socket: Socket) => {
       from: data.from,
     });
   });
+
+  socket.on("connection:request", (data: { from: string; to: string }) => {
+    logger.info(
+      { from: data.from, to: data.to },
+      "Received connection request",
+    );
+    const targetUser = emailToSocketMap.get(data.to);
+    const sender = emailToSocketMap.get(data.from);
+    if (!targetUser) {
+      socket.emit("status-update", {
+        isOnline: false,
+        message: "User offline",
+      });
+      return;
+    }
+    socket.to(targetUser.socketId).emit("connection:incoming", {
+      from: data.from,
+      fromName: sender?.name || data.from,
+    });
+  });
+
+  socket.on(
+    "connection:response",
+    (data: { from: string; to: string; accepted: boolean }) => {
+      logger.info(
+        { from: data.from, to: data.to, accepted: data.accepted },
+        "Received connection response",
+      );
+      const initiator = emailToSocketMap.get(data.to);
+      const responder = emailToSocketMap.get(data.from);
+      if (!initiator) return;
+
+      socket.to(initiator.socketId).emit("connection:result", {
+        from: data.from,
+        name: responder?.name || data.from,
+        accepted: data.accepted,
+      });
+
+      if (data.accepted) {
+        activePeers.set(data.from, data.to);
+        activePeers.set(data.to, data.from);
+      }
+    },
+  );
 
   socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
     activePeers.set(data.initiator, data.receiver);
