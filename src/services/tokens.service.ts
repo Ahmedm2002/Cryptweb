@@ -1,6 +1,5 @@
 import CONSTANTS from "../constants.js";
 import Users from "../repositories/user.repo.js";
-import isValidUuid from "../utils/helperFuncs/isValidUuid.js";
 import ApiError from "../utils/responses/ApiError.js";
 import ApiResponse from "../utils/responses/ApiResponse.js";
 import UserSession from "../repositories/user_session.repo.js";
@@ -26,7 +25,7 @@ class Tokens {
   ): Promise<ApiError | ApiResponse<AccessToken>> {
     // Implemented
     // check all fields are in the body
-    // is uuid valid check
+    // check if refresh token is valid and not tempered
     // check if user exists
     // retrieve its token by device id and user id
     // check if the session exists

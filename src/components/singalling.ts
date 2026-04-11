@@ -55,12 +55,26 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  socket.on("check-status", (data: { email: string }) => {
+  socket.on("check-status", async (data: { email: string }) => {
     logger.info(
       { socketId: socket.id, targetEmail: data.email },
       "Received check-status request",
     );
     if (!data.email) return;
+    const user = await Users.getByEmail(data.email);
+    if (!user) {
+      logger.warn(
+        { socketId: socket.id, targetEmail: data.email },
+        "Target user not found in DB",
+      );
+      socket.emit("status-update", {
+        isOnline: false,
+        name: data.email,
+        userExists: false,
+        message: "User not found in DB",
+      });
+      return;
+    }
     const targetUser = emailToSocketMap.get(data.email);
     if (targetUser) {
       logger.info(
@@ -69,6 +83,7 @@ io.on("connection", (socket: Socket) => {
       );
       socket.emit("status-update", {
         isOnline: true,
+        userExists: true,
         name: targetUser.name,
         message: "User is online",
       });
@@ -79,6 +94,7 @@ io.on("connection", (socket: Socket) => {
       );
       socket.emit("status-update", {
         isOnline: false,
+        userExists: true,
         message: "User is offline",
       });
     }
