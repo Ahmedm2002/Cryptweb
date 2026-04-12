@@ -20,13 +20,3 @@ export interface WebRTCUsersConnectedPayload {
   initiator: string;
   receiver: string;
 }
-
-export interface WebRTCFileTransferCompletePayload {
-  senderEmail: string;
-  receiverEmail: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  timeElapsed: number;
-  transferType: string;
-}

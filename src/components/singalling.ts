@@ -2,6 +2,7 @@ import { app } from "../app.js";
 import { Server, Socket } from "socket.io";
 import logger from "../utils/logger/logger.js";
 import { createServer } from "node:http";
+import CONSTANTS from "../constants.js";
 import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
@@ -29,9 +30,15 @@ const activePeers: Map<string, string> = new Map();
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 
-  socket.on("register", async ({ email, name }) => {
+  socket.on("user:register", async ({ email, name }) => {
     if (!name || !email) {
       logger.warn({ socketId: socket.id }, "Invalid registration data");
+      socket.emit("registration-error", {
+        isOnline: null,
+        name: email,
+        userExists: null,
+        message: "Conneting with friends is unable. Please try again.",
+      });
       return;
     }
     try {
@@ -41,7 +48,12 @@ io.on("connection", (socket: Socket) => {
           { email, socketId: socket.id },
           "Registration failed: User not found in DB",
         );
-        socket.emit("registration-error", { message: "User does not exist" });
+        socket.emit("registration-error", {
+          isOnline: false,
+          name: email,
+          userExists: false,
+          message: `${email} not registered with cryptweb`,
+        });
         return;
       }
       emailToSocketMap.set(email, { socketId: socket.id, name });
@@ -51,110 +63,82 @@ io.on("connection", (socket: Socket) => {
       );
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
-      socket.emit("registration-error", { message: "Internal server error" });
-    }
-  });
-
-  socket.on("check-status", async (data: { email: string }) => {
-    logger.info(
-      { socketId: socket.id, targetEmail: data.email },
-      "Received check-status request",
-    );
-    if (!data.email) return;
-    const user = await Users.getByEmail(data.email);
-    if (!user) {
-      logger.warn(
-        { socketId: socket.id, targetEmail: data.email },
-        "Target user not found in DB",
-      );
-      socket.emit("status-update", {
-        isOnline: false,
-        name: data.email,
-        userExists: false,
-        message: "User not found in DB",
-      });
-      return;
-    }
-    const targetUser = emailToSocketMap.get(data.email);
-    if (targetUser) {
-      logger.info(
-        { socketId: socket.id, targetEmail: data.email },
-        "Target user is online, emitting status-update true",
-      );
-      socket.emit("status-update", {
+      socket.emit("registration-error", {
         isOnline: true,
-        userExists: true,
-        name: targetUser.name,
-        message: "User is online",
+        name: email,
+        userExists: null,
+        message: CONSTANTS.SERVER_ERROR,
       });
-    } else {
+    }
+  });
+
+  socket.on(
+    "connection:request",
+    async (data: { from: string; to: string }) => {
       logger.info(
-        { socketId: socket.id, targetEmail: data.email },
-        "Target user is offline, emitting status-update false",
+        { from: data.from, to: data.to },
+        "Received connection request",
       );
-      socket.emit("status-update", {
-        isOnline: false,
-        userExists: true,
-        message: "User is offline",
-      });
-    }
-  });
+      if (!data.to) return;
 
-  socket.on("offer", (data: WebRTCOfferPayload) => {
-    const targetUser = emailToSocketMap.get(data.to);
-    if (!targetUser) {
-      socket.emit("user-status", { isOnline: false, message: "user offline" });
-      return;
-    }
-    socket.to(targetUser.socketId).emit("offer", {
-      offer: data.offer,
-      from: data.from,
-    });
-  });
+      try {
+        const user = await Users.getByEmail(data.to);
+        if (!user) {
+          logger.warn(
+            { to: data.to },
+            "Connection request failed: User not found",
+          );
+          socket.emit("status-update", {
+            isOnline: false,
+            userExists: false,
+            name: data.to,
+            message: `${data.to} is not registered with Cryptweb`,
+          });
+          return;
+        }
 
-  socket.on("answer", (data: WebRTCAnswerPayload) => {
-    const targetUser = emailToSocketMap.get(data.to);
-    if (!targetUser) {
-      socket.emit("user-status", { isOnline: false, message: "user offline" });
-      return;
-    }
-    socket.to(targetUser.socketId).emit("answer", {
-      answer: data.answer,
-      from: data.from,
-    });
-  });
+        const targetUser = emailToSocketMap.get(data.to);
+        const sender = emailToSocketMap.get(data.from);
 
-  socket.on("ice-candidate", (data: WebRTCIceCandidatePayload) => {
-    const targetUser = emailToSocketMap.get(data.to);
-    if (!targetUser) {
-      socket.emit("user-status", { isOnline: false, message: "user offline" });
-      return;
-    }
-    socket.to(targetUser.socketId).emit("ice-candidate", {
-      candidate: data.candidate,
-      from: data.from,
-    });
-  });
+        if (targetUser) {
+          logger.info(
+            { to: data.to },
+            "Target user online, sending connection request",
+          );
+          socket.emit("status-update", {
+            isOnline: true,
+            userExists: true,
+            name: targetUser.name,
+            message: "User is online",
+          });
 
-  socket.on("connection:request", (data: { from: string; to: string }) => {
-    logger.info(
-      { from: data.from, to: data.to },
-      "Received connection request",
-    );
-    const targetUser = emailToSocketMap.get(data.to);
-    const sender = emailToSocketMap.get(data.from);
-    if (!targetUser) {
-      socket.emit("status-update", {
-        isOnline: false,
-        message: "User offline",
-      });
-      return;
-    }
-    socket.to(targetUser.socketId).emit("connection:incoming", {
-      from: data.from,
-      fromName: sender?.name || data.from,
-    });
-  });
+          socket.to(targetUser.socketId).emit("connection:incoming", {
+            from: data.from,
+            fromName: sender?.name || data.from,
+          });
+        } else {
+          logger.info({ to: data.to }, "Target user offline");
+          socket.emit("status-update", {
+            isOnline: false,
+            userExists: true,
+            name: user.name || data.to,
+            message: "User is offline",
+          });
+        }
+      } catch (err) {
+        logger.error(
+          { err, to: data.to },
+          "Database error during connection request",
+        );
+        socket.emit("registration-error", {
+          isOnline: null,
+          name: data.to,
+          userExists: null,
+          message: "Unable to process connection request. Please try again.",
+        });
+      }
+    },
+  );
 
   socket.on(
     "connection:response",
@@ -207,6 +191,43 @@ io.on("connection", (socket: Socket) => {
     activePeers.delete(peerEmail);
     removeEmailFromMap(socket.id);
     logger.info({ socketId: socket.id }, "Client disconnected");
+  });
+
+  // *------------------------------------ WebRTC Signalling Events ---------------------------------------*
+  socket.on("offer", (data: WebRTCOfferPayload) => {
+    const targetUser = emailToSocketMap.get(data.to);
+    if (!targetUser) {
+      socket.emit("user-status", { isOnline: false, message: "user offline" });
+      return;
+    }
+    socket.to(targetUser.socketId).emit("offer", {
+      offer: data.offer,
+      from: data.from,
+    });
+  });
+
+  socket.on("answer", (data: WebRTCAnswerPayload) => {
+    const targetUser = emailToSocketMap.get(data.to);
+    if (!targetUser) {
+      socket.emit("user-status", { isOnline: false, message: "user offline" });
+      return;
+    }
+    socket.to(targetUser.socketId).emit("answer", {
+      answer: data.answer,
+      from: data.from,
+    });
+  });
+
+  socket.on("ice-candidate", (data: WebRTCIceCandidatePayload) => {
+    const targetUser = emailToSocketMap.get(data.to);
+    if (!targetUser) {
+      socket.emit("user-status", { isOnline: false, message: "user offline" });
+      return;
+    }
+    socket.to(targetUser.socketId).emit("ice-candidate", {
+      candidate: data.candidate,
+      from: data.from,
+    });
   });
 });
 
