@@ -5,14 +5,11 @@ import FileTransfers from "../repositories/file_transfers.repo.js";
 import CONSTANTS from "../constants.js";
 import isValidEmail from "../utils/helperFuncs/isValidEmail.js";
 import logger from "../utils/logger/logger.js";
-import type { WebRTCFileTransferCompletePayload } from "../interfaces/webrtc.connections.models.js";
 
 class FileTransfersService {
   constructor() {}
 
-  async saveTransferComplete(
-    data: WebRTCFileTransferCompletePayload,
-  ): Promise<ApiError | ApiResponse<any>> {
+  async saveTransferComplete(data: any): Promise<ApiError | ApiResponse<any>> {
     const {
       senderEmail,
       receiverEmail,
@@ -44,7 +41,6 @@ class FileTransfersService {
       const transfer = await FileTransfers.createTransfer({
         sender: senderUser.id as string,
         receiver: receiverUser.id as string,
-        fileName,
         fileSize,
         fileType,
         timeElapsed,

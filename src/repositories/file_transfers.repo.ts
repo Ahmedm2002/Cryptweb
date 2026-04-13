@@ -5,7 +5,6 @@ import logger from "../utils/logger/logger.js";
 export interface CreateFileTransferDTO {
   sender: string;
   receiver: string;
-  fileName: string;
   fileSize: number;
   fileType: string;
   timeElapsed: number;
@@ -17,12 +16,11 @@ class FileTransfersRepository {
     try {
       const result: QueryResult = await pool.query(
         `INSERT INTO file_transfers 
-          (sender, receiver, file_name, file_size, file_type, time_elapsed, completed_at, transfer_type) 
-         VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7) RETURNING *`,
+          (sender, receiver, file_size, file_type, time_elapsed, completed_at, transfer_type) 
+         VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING id`,
         [
           data.sender,
           data.receiver,
-          data.fileName,
           data.fileSize,
           data.fileType,
           data.timeElapsed,

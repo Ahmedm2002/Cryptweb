@@ -31,6 +31,7 @@ io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 
   socket.on("user:register", async ({ email, name }) => {
+    console.log("User regiester recieved: ", email, name);
     if (!name || !email) {
       logger.warn({ socketId: socket.id }, "Invalid registration data");
       socket.emit("registration-error", {
@@ -56,11 +57,17 @@ io.on("connection", (socket: Socket) => {
         });
         return;
       }
+      if (emailToSocketMap.has(email)) {
+        console.log("User already found deleting and updateing the socket id ");
+        emailToSocketMap.delete(email);
+        emailToSocketMap.set(email, { socketId: socket.id, name });
+      }
       emailToSocketMap.set(email, { socketId: socket.id, name });
       logger.info(
         { socketId: socket.id, email },
         "User registered for signaling",
       );
+      console.log("Email to Socket Map Status: ", emailToSocketMap);
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
       socket.emit("registration-error", {
@@ -195,6 +202,7 @@ io.on("connection", (socket: Socket) => {
 
   // *------------------------------------ WebRTC Signalling Events ---------------------------------------*
   socket.on("offer", (data: WebRTCOfferPayload) => {
+    logger.info({ from: data.from, to: data.to }, "Forwarding WebRTC Offer");
     const targetUser = emailToSocketMap.get(data.to);
     if (!targetUser) {
       socket.emit("user-status", { isOnline: false, message: "user offline" });
@@ -207,6 +215,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answer", (data: WebRTCAnswerPayload) => {
+    logger.info({ from: data.from, to: data.to }, "Forwarding WebRTC Answer");
     const targetUser = emailToSocketMap.get(data.to);
     if (!targetUser) {
       socket.emit("user-status", { isOnline: false, message: "user offline" });
@@ -219,6 +228,10 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("ice-candidate", (data: WebRTCIceCandidatePayload) => {
+    logger.info(
+      { from: data.from, to: data.to },
+      "Forwarding WebRTC ICE Candidate",
+    );
     const targetUser = emailToSocketMap.get(data.to);
     if (!targetUser) {
       socket.emit("user-status", { isOnline: false, message: "user offline" });
