@@ -58,7 +58,6 @@ io.on("connection", (socket: Socket) => {
         return;
       }
       if (emailToSocketMap.has(email)) {
-        console.log("User already found deleting and updateing the socket id ");
         emailToSocketMap.delete(email);
         emailToSocketMap.set(email, { socketId: socket.id, name });
       }
@@ -167,6 +166,7 @@ io.on("connection", (socket: Socket) => {
       if (data.accepted) {
         activePeers.set(data.from, data.to);
         activePeers.set(data.to, data.from);
+        console.log("Active Peers Map: ", activePeers);
       }
     },
   );
@@ -174,6 +174,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
     activePeers.set(data.initiator, data.receiver);
     activePeers.set(data.receiver, data.initiator);
+    console.log("Active Peers Map: ", activePeers);
     logger.info(
       { initiator: data.initiator, receiver: data.receiver },
       "Users connected and added to active peers",
@@ -246,6 +247,7 @@ io.on("connection", (socket: Socket) => {
 
 export default httpServer;
 
+// **************************************** Helper Functions ********************************************
 function removeEmailFromMap(id: string) {
   if (!id) return;
   const entry = getEmailBySocketId(id);
