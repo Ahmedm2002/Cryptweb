@@ -27,7 +27,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "npx tsc",
-    "dev": "nodemon --env-file=.env --exec tsx src/index.ts",
+    "dev": "nodemon --exec tsc src/index.ts",
     "start": "npx tsc && node dist/src/index.js"
   },
   "repository": {
