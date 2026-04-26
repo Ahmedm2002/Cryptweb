@@ -1,8 +1,5 @@
 # CryptWeb Backend — Frontend Integration Documentation
 
-> Generated from codebase analysis on 2026-03-28. Every endpoint, event, payload, and error branch documented here is traced directly from source code.
-
----
 
 ## 1. System Overview
 
@@ -73,7 +70,7 @@ All responses use one of two standardized classes.
 
 **Source:** `src/middlewares/auth.middleware.ts`
 
-Routes marked as **🔐 Authenticated** require the following header:
+Routes marked as ** Authenticated** require the following header:
 
 ```
 Authorization: Bearer <accessToken>
@@ -408,7 +405,7 @@ On success, **all existing sessions for the user are invalidated** (forced re-lo
 
 #### `GET /api/v1/user-session/all`
 
-**Auth:** 🔐 Authenticated  
+**Auth:** Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/userSessions.controller.ts` → `src/services/user-session.service.ts`
 
@@ -458,7 +455,7 @@ On success, **all existing sessions for the user are invalidated** (forced re-lo
 
 #### `DELETE /api/v1/user-session/log-out`
 
-**Auth:** 🔐 Authenticated  
+**Auth:**  Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/userSessions.controller.ts` → `src/services/user-session.service.ts`
 
@@ -497,7 +494,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 #### `POST /api/v1/user-session/log-out/all-sessions`
 
-**Auth:** 🔐 Authenticated  
+**Auth:**  Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/userSessions.controller.ts` → `src/services/user-session.service.ts`
 
@@ -572,7 +569,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 #### `POST /api/v1/file-transfers/complete`
 
-**Auth:** 🔐 Authenticated  
+**Auth:**  Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/fileTransfers.controller.ts` → `src/services/fileTransfers.service.ts` → `src/repositories/file_transfers.repo.ts`
 
@@ -940,8 +937,6 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 2. After completion, client calls POST /api/v1/file-transfers/complete
 3. Server resolves emails to user UUIDs and persists the record
 ```
-
-> File chunking, DataChannel setup, and actual P2P transfer logic are **not implemented in the backend**. The backend only records completed transfers.
 
 ---
 
