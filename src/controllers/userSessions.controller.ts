@@ -121,10 +121,22 @@ async function getCurrentSession(req: CustomRequest, res: Response) {
   }
 }
 
+async function checkUserStatus(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+    const response = await userSessionServ.checkStatus(email);
+    return res.status(response.statusCode).json(response)
+  } catch (error) {
+    logger.fatal({ err: error }, "Failed to retrieve current session");
+    return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
+  }
+}
+
 export {
   getAllSessions,
   invalidateSession,
   getAccessToken,
   logOutAllDevices,
   getCurrentSession,
+  checkUserStatus,
 };

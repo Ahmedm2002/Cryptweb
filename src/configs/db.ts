@@ -12,13 +12,17 @@ const pool: Pool = new Pool({
   max: 20,
 });
 
-pool
-  .connect()
-  .then((client) => {
-    logger.info("Database connected");
-    client.release();
-  })
-  .catch((err) => {
-    logger.error({ err }, "Database connection error");
-  });
+function testConnection() {
+  pool
+    .connect()
+    .then((client) => {
+      logger.info("Database connected");
+      client.release();
+    })
+    .catch((err) => {
+      logger.error({ err }, "Database connection error");
+    });
+}
+
+testConnection();
 export { pool };

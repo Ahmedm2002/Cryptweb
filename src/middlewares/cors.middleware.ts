@@ -1,8 +1,7 @@
 import cors from "cors";
-import dotenv from "dotenv";
-dotenv.config();
+import dotenv from 'dotenv'
 
-console.log("Allowed Origins: ", process.env.ALLOWED_ORIGIN);
+dotenv.config()
 const corsOptions: cors.CorsOptions = {
   origin: process.env.ALLOWED_ORIGIN,
   methods: ["GET", "POST", "PUT", "DELETE"],

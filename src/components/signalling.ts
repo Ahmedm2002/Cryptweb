@@ -10,8 +10,6 @@ import type {
   WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
-import dotenv from "dotenv";
-dotenv.config();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -245,7 +243,7 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-export default httpServer;
+export { httpServer, emailToSocketMap };
 
 // **************************************** Helper Functions ********************************************
 function removeEmailFromMap(id: string) {

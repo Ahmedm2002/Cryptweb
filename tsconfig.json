@@ -24,6 +24,9 @@
     "**/*.ts",
     "src/configs/db.ts",
     "src/app.js",
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/*",
     "__tests__/**/*.ts"
   ],
   "exclude": ["dist", "node_modules", "*.docker", ".git*", "compose.yaml"]
