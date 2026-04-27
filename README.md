@@ -1,5 +1,4 @@
-# CryptWeb Backend — Frontend Integration Documentation
-
+# CryptWeb Backend
 
 ## 1. System Overview
 
