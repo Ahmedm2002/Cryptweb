@@ -13,12 +13,12 @@ const apiVersion = process.env.API_VERSION;
 
 const app: Express = express();
 app.use(cookieParser());
-app.use(express.static("public/"));
+app.use(express.json({ limit: "16kb" }));
 app.use(helmet());
+app.use(express.static("public/"));
 app.use(corsMiddleware);
 
 transport.verify();
-app.use(express.json({ limit: "16kb" }));
 app.use(logRequest);
 app.use(`/api`, v1Router);
 
