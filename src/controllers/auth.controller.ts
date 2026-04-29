@@ -34,7 +34,7 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
     }
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error({ err: error }, "Login failed unexpectedly");
+    logger.fatal({ err: error }, "Login failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }
 }
@@ -51,7 +51,7 @@ async function signupUser(req: Request, res: Response): Promise<Response> {
     const response = await authServ.signup(name, password, email);
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
-    logger.error({ err: error }, "Signup failed unexpectedly");
+    logger.fatal({ err: error }, "Signup failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }
 }
@@ -62,7 +62,7 @@ async function googleLogin(req: Request, res: Response): Promise<Response> {
     const response = await authServ.googleLogin(token);
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
-    logger.error({ err: error }, "Signup failed unexpectedly");
+    logger.fatal({ err: error }, "Signup failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }
 }

@@ -102,7 +102,7 @@ class AuthService {
         "logged in successfully",
       );
     } catch (error: any) {
-      logger.error({ err: error }, "Login failed unexpectedly");
+      logger.fatal({ err: error }, "Login failed unexpectedly");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }
@@ -162,7 +162,7 @@ class AuthService {
         "User created successfully",
       );
     } catch (error: any) {
-      logger.error({ err: error }, "Signup failed unexpectedly");
+      logger.fatal({ err: error }, "Signup failed unexpectedly");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }

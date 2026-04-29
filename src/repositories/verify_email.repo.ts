@@ -24,7 +24,7 @@ class EmailVerificationRepo {
       );
       return response.rows[0] || null;
     } catch (error: any) {
-      logger.error({ err: error }, "Failed to insert verification token");
+      logger.fatal({ err: error }, "Failed to insert verification token");
       throw new Error("Error adding verification token");
     }
   }
@@ -41,7 +41,7 @@ class EmailVerificationRepo {
       );
       return result.rows[0];
     } catch (error) {
-      logger.error({ err: error }, "Failed to retrieve verification token");
+      logger.fatal({ err: error }, "Failed to retrieve verification token");
       throw new Error("Error getting user code");
     }
   }
