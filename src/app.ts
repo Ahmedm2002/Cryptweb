@@ -18,7 +18,7 @@ app.use(helmet());
 app.use(express.static("public/"));
 app.use(corsMiddleware);
 
-transport.verify();
+// transport.verify();
 app.use(logRequest);
 app.use(`/api`, v1Router);
 

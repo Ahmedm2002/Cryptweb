@@ -5,6 +5,7 @@ import {
   getAccessToken,
   getCurrentSession,
   checkUserStatus,
+  getAllActiveUsers,
 } from "../../controllers/userSessions.controller.js";
 import { Router } from "express";
 import authenticateUser from "../../middlewares/auth.middleware.js";
@@ -17,5 +18,6 @@ router.delete("/log-out", authenticateUser, invalidateSession);
 router.post("/log-out/all-sessions", authenticateUser, logOutAllDevices);
 router.post("/get-access-token", getAccessToken);
 router.post("/get-friend-status", authenticateUser, checkUserStatus);
+router.get("/get-user-map-status", getAllActiveUsers);
 
 export default router;

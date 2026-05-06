@@ -29,7 +29,6 @@ io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 
   socket.on("user:register", async ({ email, name }) => {
-    console.log("User regiester recieved: ", email, name);
     if (!name || !email) {
       logger.warn({ socketId: socket.id }, "Invalid registration data");
       socket.emit("registration-error", {
@@ -64,7 +63,6 @@ io.on("connection", (socket: Socket) => {
         { socketId: socket.id, email },
         "User registered for signaling",
       );
-      console.log("Email to Socket Map Status: ", emailToSocketMap);
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
       socket.emit("registration-error", {
@@ -180,6 +178,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("disconnect", () => {
+    logger.info({ socketId: socket.id }, "user disconnected");
     const email = getEmailBySocketId(socket.id);
     if (!email) return;
     const peerEmail = activePeers.get(email);

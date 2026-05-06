@@ -120,12 +120,12 @@ class UserSessionService {
       if (!friend)
         return new ApiError(400, `User not found with email ${email}`);
 
-      const isOnline  = emailToSocketMap.has(email)
+      const isOnline = emailToSocketMap.has(email);
 
-      if(!isOnline){
-        return new ApiResponse(200, {isOnline}, `${friend.name} is offline`)
+      if (!isOnline) {
+        return new ApiResponse(200, { isOnline }, `${friend.name} is offline`);
       }
-      
+
       return new ApiResponse(
         200,
         { isOnline: true },
@@ -135,6 +135,10 @@ class UserSessionService {
       logger.fatal({ err: error }, "Failed to get current user session");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
+  }
+
+  getActiveUsers() {
+    return emailToSocketMap;
   }
 }
 
