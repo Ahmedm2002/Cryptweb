@@ -129,7 +129,7 @@ class UserSessionService {
       return new ApiResponse(
         200,
         { isOnline: true },
-        `${friend.name} is offline`,
+        `${friend.name} is online`,
       );
     } catch (error) {
       logger.fatal({ err: error }, "Failed to get current user session");

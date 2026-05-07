@@ -24,7 +24,6 @@ const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
 const activePeers: Map<string, string> = new Map();
-
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 
@@ -57,11 +56,16 @@ io.on("connection", (socket: Socket) => {
       if (emailToSocketMap.has(email)) {
         emailToSocketMap.delete(email);
         emailToSocketMap.set(email, { socketId: socket.id, name });
+      } else {
+        emailToSocketMap.set(email, { socketId: socket.id, name });
       }
-      emailToSocketMap.set(email, { socketId: socket.id, name });
       logger.info(
         { socketId: socket.id, email },
         "User registered for signaling",
+      );
+      console.log(
+        { socketId: socket.id, email },
+        "User registered for signaling console.log",
       );
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
@@ -159,41 +163,25 @@ io.on("connection", (socket: Socket) => {
         accepted: data.accepted,
       });
 
-      if (data.accepted) {
-        activePeers.set(data.from, data.to);
-        activePeers.set(data.to, data.from);
-        console.log("Active Peers Map: ", activePeers);
-      }
+      // if (data.accepted) {
+      //   activePeers.set(data.from, data.to);
+      //   activePeers.set(data.to, data.from);
+      //   console.log("Active Peers Map: ", activePeers);
+      // }
     },
   );
 
-  socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
-    activePeers.set(data.initiator, data.receiver);
-    activePeers.set(data.receiver, data.initiator);
-    console.log("Active Peers Map: ", activePeers);
-    logger.info(
-      { initiator: data.initiator, receiver: data.receiver },
-      "Users connected and added to active peers",
-    );
-  });
+  // socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
+  //   activePeers.set(data.initiator, data.receiver);
+  //   activePeers.set(data.receiver, data.initiator);
+  //   console.log("Active Peers Map: ", activePeers);
+  //   logger.info(
+  //     { initiator: data.initiator, receiver: data.receiver },
+  //     "Users connected and added to active peers",
+  //   );
+  // });
 
   socket.on("disconnect", () => {
-    logger.info({ socketId: socket.id }, "user disconnected");
-    const email = getEmailBySocketId(socket.id);
-    if (!email) return;
-    const peerEmail = activePeers.get(email);
-    if (!peerEmail) return;
-    const peer = emailToSocketMap.get(peerEmail);
-    if (peer) {
-      const user = emailToSocketMap.get(email);
-      const name = user ? user.name : "User";
-      socket.to(peer.socketId).emit("user-status", {
-        isOnline: false,
-        message: `${name} went offline`,
-      });
-    }
-    activePeers.delete(email);
-    activePeers.delete(peerEmail);
     removeEmailFromMap(socket.id);
     logger.info({ socketId: socket.id }, "Client disconnected");
   });
@@ -250,6 +238,7 @@ function removeEmailFromMap(id: string) {
   const entry = getEmailBySocketId(id);
   if (!entry) return;
   emailToSocketMap.delete(entry);
+  console.log("Online users list: ", emailToSocketMap);
 }
 
 function getEmailBySocketId(id: string): string | null {
