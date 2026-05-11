@@ -28,17 +28,14 @@ async function getAllSessions(req: CustomRequest, res: Response) {
  * @param res
  */
 async function invalidateSession(req: Request, res: Response) {
-  const { sessionId, deviceId } = req.body;
-
+  const { sessionId } = req.cookies;
   try {
-    const response = await userSessionServ.invalidateSession(
-      sessionId,
-      deviceId,
-    );
+    const response = await userSessionServ.invalidateSession(sessionId);
     return res
       .clearCookie("accessToken")
       .clearCookie("refreshToken")
       .clearCookie("deviceId")
+      .clearCookie("sessionId")
       .status(response.statusCode)
       .json(response);
   } catch (error: any) {

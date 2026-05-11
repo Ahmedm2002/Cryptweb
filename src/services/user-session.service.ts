@@ -37,19 +37,15 @@ class UserSessionService {
   }
   async invalidateSession(
     sessionId: string,
-    deviceId: string,
   ): Promise<ApiError | ApiResponse<string>> {
-    if (!sessionId || !deviceId) {
+    if (!sessionId) {
       return new ApiError(400, "Required fields missing");
     }
     if (!isValidUuid(sessionId)) {
       return new ApiError(400, "Invalid user id");
     }
     try {
-      const id: string = await UserSession.deleteUserSession(
-        sessionId,
-        deviceId,
-      );
+      const id: string = await UserSession.deleteUserSession(sessionId);
       if (!id) {
         return new ApiError(400, "No session found");
       }

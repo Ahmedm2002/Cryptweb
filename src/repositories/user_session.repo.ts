@@ -81,14 +81,11 @@ class UserSessionsRepo {
     }
   }
 
-  async deleteUserSession(
-    sessionId: string,
-    deviceId: string,
-  ): Promise<string> {
+  async deleteUserSession(sessionId: string): Promise<string> {
     try {
       const result: QueryResult = await pool.query(
-        "Delete from user_sessions where id = $1 and device_id = $2 returning id",
-        [sessionId, deviceId],
+        "Delete from user_sessions where id = $1 returning id",
+        [sessionId],
       );
       return result.rows[0];
     } catch (error: any) {

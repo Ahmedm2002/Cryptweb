@@ -14,8 +14,8 @@ const router: Router = Router();
 
 router.get("/all", authenticateUser, getAllSessions);
 router.get("/1", authenticateUser, getCurrentSession);
-router.delete("/log-out", authenticateUser, invalidateSession);
-router.post("/log-out/all-sessions", authenticateUser, logOutAllDevices);
+router.post("/logout", authenticateUser, invalidateSession);
+router.post("/logout/all-sessions", authenticateUser, logOutAllDevices);
 router.post("/get-access-token", getAccessToken);
 router.post("/get-friend-status", authenticateUser, checkUserStatus);
 router.get("/get-user-map-status", getAllActiveUsers);
