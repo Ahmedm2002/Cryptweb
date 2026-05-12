@@ -19,7 +19,7 @@ app.use(express.static("public/"));
 app.use(corsMiddleware);
 
 // transport.verify();
-app.use(logRequest);
+// app.use(logRequest);
 app.use(`/api`, v1Router);
 
 app.get("/api/", (_, res) => {

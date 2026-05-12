@@ -5,17 +5,17 @@ dotenv.config({
   quiet: true,
 });
 
-async function startServer() {
+async function bootstrapApplication(server: any) {
   try {
     await pool.connect();
-    httpServer.listen(process.env.PORT || 3000, () => {
+    server.listen(process.env.PORT || 3000, () => {
       console.log({ port: process.env.PORT || 3000 }, "Server started");
     });
   } catch (err) {
     console.log({ err }, "Startup failure");
-    console.error("FULL ERROR:", err);
+    console.error("COMPLETE ERROR:", err);
     process.exit(1);
   }
 }
 
-startServer();
+bootstrapApplication(httpServer);

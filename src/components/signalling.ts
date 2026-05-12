@@ -7,7 +7,6 @@ import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
   WebRTCIceCandidatePayload,
-  WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
 const httpServer = createServer(app);
@@ -23,7 +22,7 @@ const io = new Server(httpServer, {
 const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
-const activePeers: Map<string, string> = new Map();
+// const activePeers: Map<string, string> = new Map();
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 

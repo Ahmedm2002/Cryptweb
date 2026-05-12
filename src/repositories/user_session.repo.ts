@@ -96,7 +96,7 @@ class UserSessionsRepo {
   async getSession(userId: string, sessionId: string): Promise<userSessionI> {
     try {
       const session: QueryResult = await pool.query(
-        "SELECT id, user_id, refresh_token, expires_at, device_id, device_type FROM user_sessions WHERE id = $1 AND user_id = $2",
+        "SELECT id, refresh_token, device_id FROM user_sessions WHERE id = $1 AND user_id = $2",
         [sessionId, userId],
       );
       return session.rows[0];
