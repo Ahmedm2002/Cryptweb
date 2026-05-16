@@ -1,9 +1,5 @@
-import dotenv from "dotenv";
 import { httpServer } from "./components/signalling.js";
 import { pool } from "./configs/db.js";
-dotenv.config({
-  quiet: true,
-});
 
 async function bootstrapApplication(server: any) {
   try {

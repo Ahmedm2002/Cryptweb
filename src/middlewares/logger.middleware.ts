@@ -10,6 +10,7 @@ const logRequest = (req: CustomRequest, res: Response, next: NextFunction) => {
       "Insecure request received over HTTP",
     );
     return res.status(400).json({
+      statusCode: 400,
       status: "error",
       message: "Insecure request. Please use HTTPS.",
     });
@@ -40,7 +41,6 @@ const logRequest = (req: CustomRequest, res: Response, next: NextFunction) => {
       "Request completed",
     );
   });
-
   next();
 };
 

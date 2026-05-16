@@ -1,8 +1,6 @@
 import { Pool } from "pg";
 import logger from "../utils/logger/logger.js";
-import dotenv from "dotenv";
 
-dotenv.config();
 const pool: Pool = new Pool({
   host: process.env.DATABASE_HOST,
   port: Number(process.env.DATABASE_PORT),

@@ -19,10 +19,10 @@ app.use(express.static("public/"));
 app.use(corsMiddleware);
 
 // transport.verify();
-// app.use(logRequest);
+app.use(logRequest);
 app.use(`/api`, v1Router);
 
-app.get("/api/", (_, res) => {
+app.get("/api/", (req, res) => {
   logger.info("/GET successfull");
   return res
     .status(200)

@@ -22,6 +22,10 @@ const io = new Server(httpServer, {
 const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
+// console.log("Logger: ", logger);
+logger.info("infor message from logger");
+// console.log(logger.info("info message from logger "));
+
 // const activePeers: Map<string, string> = new Map();
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
@@ -61,10 +65,6 @@ io.on("connection", (socket: Socket) => {
       logger.info(
         { socketId: socket.id, email },
         "User registered for signaling",
-      );
-      console.log(
-        { socketId: socket.id, email },
-        "User registered for signaling console.log",
       );
     } catch (err) {
       logger.error({ err, email }, "Database error during registration");
@@ -156,7 +156,7 @@ io.on("connection", (socket: Socket) => {
       const responder = emailToSocketMap.get(data.from);
       if (!initiator) return;
 
-      socket.to(initiator.socketId).emit("connection:result", {
+      socket.to(initiator.socketId).emit("connection:response", {
         from: data.from,
         name: responder?.name || data.from,
         accepted: data.accepted,
@@ -165,7 +165,6 @@ io.on("connection", (socket: Socket) => {
       // if (data.accepted) {
       //   activePeers.set(data.from, data.to);
       //   activePeers.set(data.to, data.from);
-      //   console.log("Active Peers Map: ", activePeers);
       // }
     },
   );
@@ -173,7 +172,6 @@ io.on("connection", (socket: Socket) => {
   // socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
   //   activePeers.set(data.initiator, data.receiver);
   //   activePeers.set(data.receiver, data.initiator);
-  //   console.log("Active Peers Map: ", activePeers);
   //   logger.info(
   //     { initiator: data.initiator, receiver: data.receiver },
   //     "Users connected and added to active peers",
@@ -187,7 +185,6 @@ io.on("connection", (socket: Socket) => {
 
   // *------------------------------------ WebRTC Signalling Events ---------------------------------------*
   socket.on("offer", (data: WebRTCOfferPayload) => {
-    logger.info({ from: data.from, to: data.to }, "Forwarding WebRTC Offer");
     const targetUser = emailToSocketMap.get(data.to);
     if (!targetUser) {
       socket.emit("user-status", { isOnline: false, message: "user offline" });
@@ -237,7 +234,6 @@ function removeEmailFromMap(id: string) {
   const entry = getEmailBySocketId(id);
   if (!entry) return;
   emailToSocketMap.delete(entry);
-  console.log("Online users list: ", emailToSocketMap);
 }
 
 function getEmailBySocketId(id: string): string | null {
