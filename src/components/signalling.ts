@@ -22,11 +22,6 @@ const io = new Server(httpServer, {
 const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
-// console.log("Logger: ", logger);
-logger.info("infor message from logger");
-// console.log(logger.info("info message from logger "));
-
-// const activePeers: Map<string, string> = new Map();
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
 

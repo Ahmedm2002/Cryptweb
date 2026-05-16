@@ -14,7 +14,7 @@ async function testNodemailer() {
     await transport.verify();
     logger.info("Email transport verified — SMTP connection OK");
   } catch (err) {
-    console.error("Verification failed", err);
+    logger.fatal({ err }, "Verification failed");
   }
 }
 
