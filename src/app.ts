@@ -12,6 +12,7 @@ import corsMiddleware from "./middlewares/cors.middleware.js";
 const apiVersion = process.env.API_VERSION;
 
 const app: Express = express();
+app.set("trust-proxy", 1);
 app.use(cookieParser());
 app.use(express.json({ limit: "16kb" }));
 app.use(helmet());
