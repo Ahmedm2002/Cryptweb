@@ -6,7 +6,7 @@ type CONSTS = {
     path: string;
     sameSite: "lax" | "none" | "strict" | boolean;
     maxAge: number;
-    Domain: string | undefined;
+    Domain: string;
   };
   authCookieOpts: {
     httpOnly: boolean;
@@ -14,7 +14,7 @@ type CONSTS = {
     path: string;
     sameSite: "lax" | "none" | "strict" | boolean;
     maxAge: number;
-    Domain: string | undefined;
+    Domain: string;
   };
   OTP_EXPIRY_MS: number;
 };
