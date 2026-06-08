@@ -9,13 +9,6 @@ const CONSTANTS: CONSTS = {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 8000,
   },
-  authCookieOpts: {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 24 * 60 * 60 * 8000,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  },
   OTP_EXPIRY_MS: 300000,
 };
 

@@ -19,11 +19,7 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
     if (response.success) {
       return res
         .status(response.statusCode)
-        .cookie(
-          "accessToken",
-          response.data?.accessToken,
-          CONSTANTS.authCookieOpts,
-        )
+        .cookie("accessToken", response.data?.accessToken, CONSTANTS.cookieOpts)
         .cookie(
           "refreshToken",
           response.data?.refreshToken,
