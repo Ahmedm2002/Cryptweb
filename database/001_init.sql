@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens(
   revoked_at TIMESTAMPTZ default null,
   created_at TIMESTAMPTZ default NOW(),
   expires_at TIMESTAMPTZ NOT NULL 
-) 
+); 
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens(
   id UUID PRIMARY KEY default gen_random_uuid(),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens(
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   token_hash TEXT NOT NULL,
   used_at TIMESTAMPTZ DEFAULT NULL
-)
+);
 
 CREATE TABLE IF NOT EXISTS file_transfers(
   id UUID PRIMARY KEY default gen_random_uuid(),
@@ -49,4 +49,4 @@ CREATE TABLE IF NOT EXISTS file_transfers(
   time_elapsed INTEGER NOT NULL,
   completed_at TIMESTAMPTZ DEFAULT NULL,
   transfer_type TEXT NOT NULL   
-)
+);
