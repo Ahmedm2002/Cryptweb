@@ -11,14 +11,10 @@ async function authenticateUser(
   res: Response,
   next: NextFunction,
 ) {
-  const authHeader = req.headers?.["authorization"] || null;
+  const token = req.cookies.accessToken;
 
-  if (!authHeader) {
-    return res.status(400).json(new ApiError(400, "Auth headers missing"));
-  }
-  const token = authHeader && authHeader?.split(" ")[1];
   if (!token) {
-    return res.status(401).json(new ApiError(401, "Access token required"));
+    return res.status(400).json(new ApiError(401, "Auth headers missing"));
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
