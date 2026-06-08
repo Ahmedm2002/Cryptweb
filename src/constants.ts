@@ -8,7 +8,6 @@ const CONSTANTS: CONSTS = {
     path: "/",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 8000,
-    domain: "cryptweb.galaxydev.pk",
   },
   authCookieOpts: {
     httpOnly: false,
@@ -16,7 +15,6 @@ const CONSTANTS: CONSTS = {
     path: "/",
     maxAge: 24 * 60 * 60 * 8000,
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    domain: "cryptweb.galaxydev.pk",
   },
   OTP_EXPIRY_MS: 300000,
 };
