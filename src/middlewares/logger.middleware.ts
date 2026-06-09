@@ -24,7 +24,7 @@ const logRequest = (req: CustomRequest, res: Response, next: NextFunction) => {
   res.setHeader("x-request-id", requestId);
 
   logger.info(
-    { requestId, method: req.method, url: req.url },
+    { requestId, method: req.method, url: req.url, ip: req.ip },
     "Incoming request",
   );
 
@@ -37,6 +37,7 @@ const logRequest = (req: CustomRequest, res: Response, next: NextFunction) => {
         url: req.originalUrl,
         statusCode: res.statusCode,
         durationMs: duration,
+        ip: req.ip,
       },
       "Request completed",
     );
