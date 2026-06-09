@@ -11,13 +11,13 @@ async function authenticateUser(
   res: Response,
   next: NextFunction,
 ) {
-  const token = req.cookies.accessToken;
+  const { accessToken, refreshToken } = req.cookies;
 
-  if (!token) {
-    return res.status(400).json(new ApiError(401, "Auth headers missing"));
+  if (!accessToken && refreshToken) {
+    return res.status(401).json(new ApiError(401, "Token expired"));
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET!);
     req.user = { id: decoded.sub as string };
     req.deviceInfo = new UAParser(req.headers["user-agent"] || "");
     next();

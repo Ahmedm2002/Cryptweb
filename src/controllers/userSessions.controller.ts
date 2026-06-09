@@ -79,11 +79,7 @@ async function getAccessToken(req: Request, res: Response) {
     if (response.success) {
       return res
         .status(response.statusCode)
-        .cookie(
-          "accessToken",
-          response.data?.accessToken,
-          CONSTANTS.authCookieOpts,
-        )
+        .cookie("accessToken", response.data?.accessToken, CONSTANTS.cookieOpts)
         .json(response);
     }
 
