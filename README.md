@@ -402,7 +402,7 @@ On success, **all existing sessions for the user are invalidated** (forced re-lo
 
 ### 5.5 Session Management
 
-#### `GET /api/v1/user-session/all`
+#### `GET /api/v1/session/all`
 
 **Auth:** Authenticated  
 **Rate Limit:** None  
@@ -452,9 +452,9 @@ On success, **all existing sessions for the user are invalidated** (forced re-lo
 
 ---
 
-#### `DELETE /api/v1/user-session/log-out`
+#### `DELETE /api/v1/session/log-out`
 
-**Auth:**  Authenticated  
+**Auth:** Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/userSessions.controller.ts` → `src/services/user-session.service.ts`
 
@@ -491,9 +491,9 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 ---
 
-#### `POST /api/v1/user-session/log-out/all-sessions`
+#### `POST /api/v1/session/log-out/all-sessions`
 
-**Auth:**  Authenticated  
+**Auth:** Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/userSessions.controller.ts` → `src/services/user-session.service.ts`
 
@@ -520,7 +520,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 ---
 
-#### `POST /api/v1/user-session/get-access-token`
+#### `POST /api/v1/session/renew`
 
 **Auth:** None  
 **Rate Limit:** None  
@@ -568,7 +568,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 #### `POST /api/v1/file-transfers/complete`
 
-**Auth:**  Authenticated  
+**Auth:** Authenticated  
 **Rate Limit:** None  
 **Source:** `src/controllers/fileTransfers.controller.ts` → `src/services/fileTransfers.service.ts` → `src/repositories/file_transfers.repo.ts`
 
@@ -913,7 +913,7 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 ### 8.3 Token Refresh Flow
 
 ```
-1. POST /api/v1/user-session/get-access-token → Send refreshToken + userId + deviceId + sessionId
+1. POST /api/v1/session/renew → Send refreshToken + userId + deviceId + sessionId
 2. Receive new accessToken in response
 ```
 

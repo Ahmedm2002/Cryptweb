@@ -13,7 +13,7 @@ const router: Router = Router({
 
 router.use("/v1/auth", authRoutes);
 router.use("/v1/verify", verficationRoutes);
-router.use("/v1/user-session", sessionRoutes);
+router.use("/v1/session", sessionRoutes);
 router.use("/v1/password", resetPassRoutes);
 router.use("/v1/health", healthRoutes);
 router.use("/v1/file-transfers", fileTransferRoutes);
