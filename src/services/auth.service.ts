@@ -15,8 +15,6 @@ import type { Tokens } from "../interfaces/tokens.model.js";
 import safeUserParse from "../utils/dtoMapper/user.mapper.js";
 import type { LoginResDto, SignupResDto } from "../dtos/auth/auth.dto.js";
 import type { SafeUserDto } from "../dtos/user/user.dto.js";
-import emaiVerification from "../repositories/verify_email.repo.js";
-import sendVerificationCode from "../utils/nodeMailer/sendVerificationEmail.js";
 import { fromError } from "zod-validation-error";
 import logger from "../utils/logger/logger.js";
 import { UAParser } from "ua-parser-js";

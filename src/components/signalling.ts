@@ -7,6 +7,7 @@ import type {
   WebRTCOfferPayload,
   WebRTCAnswerPayload,
   WebRTCIceCandidatePayload,
+  WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
 const httpServer = createServer(app);
@@ -21,6 +22,7 @@ const io = new Server(httpServer, {
 
 const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
+const activePeers: Map<string, string> = new Map();
 
 io.on("connection", (socket: Socket) => {
   logger.info({ socketId: socket.id }, "Authenticated client connected");
@@ -164,16 +166,34 @@ io.on("connection", (socket: Socket) => {
     },
   );
 
-  // socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
-  //   activePeers.set(data.initiator, data.receiver);
-  //   activePeers.set(data.receiver, data.initiator);
-  //   logger.info(
-  //     { initiator: data.initiator, receiver: data.receiver },
-  //     "Users connected and added to active peers",
-  //   );
-  // });
+  socket.on("users:connected", (data: WebRTCUsersConnectedPayload) => {
+    activePeers.set(data.initiator, data.receiver);
+    activePeers.set(data.receiver, data.initiator);
+    logger.info(
+      { initiator: data.initiator, receiver: data.receiver },
+      "Users connected and added to active peers",
+    );
+  });
 
   socket.on("disconnect", () => {
+    const email = getEmailBySocketId(socket.id);
+    if (email) {
+      const peerEmail = activePeers.get(email);
+      if (peerEmail) {
+        const peerInfo = emailToSocketMap.get(peerEmail);
+        const disconnectedUser = emailToSocketMap.get(email);
+        const name = disconnectedUser?.name || email;
+        if (peerInfo) {
+          io.to(peerInfo.socketId).emit("peer:disconnected", {
+            name,
+            email,
+            message: `${name} went offline. Try again later`,
+          });
+        }
+        activePeers.delete(email);
+        activePeers.delete(peerEmail);
+      }
+    }
     removeEmailFromMap(socket.id);
     logger.info({ socketId: socket.id }, "Client disconnected");
   });
