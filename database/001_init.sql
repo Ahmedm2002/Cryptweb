@@ -44,9 +44,9 @@ CREATE TABLE IF NOT EXISTS file_transfers(
   id UUID PRIMARY KEY default gen_random_uuid(),
   sender UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   receiver UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  file_size BIGINT NOT NULL,
+  file_size NUMERIC(10,2) NOT NULL,
   file_type TEXT NOT NULL,
-  time_elapsed INTEGER NOT NULL,
+  time_elapsed DOUBLE PRECISION NOT NULL,
   completed_at TIMESTAMPTZ DEFAULT NULL,
   transfer_type TEXT NOT NULL   
 );

@@ -38,10 +38,12 @@ class FileTransfersService {
         return new ApiError(404, "Sender or receiver not found");
       }
 
+      const fileSizeMB = Math.round((fileSize / 1048576) * 100) / 100;
+
       const transfer = await FileTransfers.createTransfer({
         sender: senderUser.id as string,
         receiver: receiverUser.id as string,
-        fileSize,
+        fileSize: fileSizeMB,
         fileType,
         timeElapsed,
         transferType,
