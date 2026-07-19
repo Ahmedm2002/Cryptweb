@@ -9,7 +9,9 @@ CryptWeb is a Node.js/Express backend service providing:
 - **Password Management** (forgot + reset password with email token)
 - **Session Management** (multi-device sessions, logout, token refresh)
 - **File Transfer Logging** (persists completed P2P file transfer metadata)
+- **File Transfer History** (retrieve recent transfers for the authenticated user)
 - **WebRTC Signaling** (Socket.IO-based offer/answer/ICE exchange with active peer tracking)
+- **Network Discovery** (Socket.IO rooms grouped by client IP + REST endpoint for LAN IP and online users)
 - **Health Check** (application + database status)
 
 **Base URL:** All REST routes are prefixed with `/api`.
@@ -591,7 +593,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 | `senderEmail`   | `string` | Email of file sender                          |
 | `receiverEmail` | `string` | Email of file receiver                        |
 | `fileName`      | `string` | Name of the transferred file                  |
-| `fileSize`      | `number` | File size in bytes                            |
+| `fileSize`      | `number` | File size in bytes (converted to MB on save)  |
 | `fileType`      | `string` | MIME type                                     |
 | `timeElapsed`   | `number` | Transfer duration in milliseconds             |
 | `transferType`  | `string` | Transfer method (e.g., `"WebRTC"`, `"Relay"`) |
@@ -628,7 +630,81 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 ---
 
-### 5.7 Health Check
+#### `GET /api/v1/file-transfers/recent`
+
+**Auth:** Authenticated  
+**Rate Limit:** None  
+**Source:** `src/controllers/fileTransfers.controller.ts` → `src/services/fileTransfers.service.ts` → `src/repositories/file_transfers.repo.ts`
+
+**Query Parameters:**
+
+| Param  | Type     | Default | Max | Description            |
+| ------ | -------- | ------- | --- | ---------------------- |
+| `limit` | `number` | 10      | 50  | Number of transfers to return |
+
+**Response (200):**
+
+```json
+{
+  "statusCode": 200,
+  "data": [
+    {
+      "id": "uuid",
+      "fileSize": 0.01,
+      "fileType": "text/markdown",
+      "timeElapsed": 0.045,
+      "transferType": "send",
+      "completedAt": "2026-07-18T12:28:09.034Z",
+      "senderName": "Alice",
+      "senderEmail": "alice@example.com",
+      "receiverName": "Bob",
+      "receiverEmail": "bob@example.com"
+    }
+  ],
+  "message": "Recent transfers fetched",
+  "success": true
+}
+```
+
+**Errors:**
+
+| Status | Message                   | Condition        |
+| ------ | ------------------------- | ---------------- |
+| `401`  | `Unauthorized`            | Not authenticated |
+| `500`  | `Something went wrong...` | Unexpected error  |
+
+---
+
+### 5.7 Network
+
+#### `GET /api/network/ip`
+
+**Auth:** None  
+**Rate Limit:** None  
+**Source:** `src/app.ts`
+
+Returns the server's LAN IP and all online users on the requesting client's network.
+
+**Response (200):**
+
+```json
+{
+  "statusCode": 200,
+  "data": {
+    "ip": "192.168.1.100",
+    "onlineUsers": [
+      { "email": "alice@example.com", "name": "Alice" },
+      { "email": "bob@example.com", "name": "Bob" }
+    ]
+  },
+  "message": "Local network IP",
+  "success": true
+}
+```
+
+---
+
+### 5.8 Health Check
 
 #### `GET /api/v1/health`
 
@@ -680,7 +756,7 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 ## 6. Socket.IO Documentation
 
-**Source:** `src/components/singalling.ts`
+**Source:** `src/components/signalling.ts`
 
 The Socket.IO server runs on the same HTTP server as Express. Connect using:
 
@@ -688,14 +764,16 @@ The Socket.IO server runs on the same HTTP server as Express. Connect using:
 const socket = io("http://localhost:<PORT>");
 ```
 
-No socket-level authentication middleware is found in the codebase. Registration is handled via the `register` event with database validation.
+Registration is handled via the `user:register` event with database validation.  
+Client IP is detected via `x-forwarded-for` header (trust proxy) or `socket.handshake.address`, normalized for both IPv4 and IPv6, and used to group users into network rooms for local discovery.
+
+**Shared State:** Socket state (`emailToSocketMap`, `activePeers`, `ipToUsersMap`) lives in `src/utils/networkStore.ts` and is also accessible from REST endpoints.
 
 ---
 
-### 6.1 `register`
+### 6.1 `user:register`
 
-**Direction:** Client → Server  
-**Source:** `singalling.ts` lines 25–49
+**Direction:** Client → Server
 
 **Payload:**
 
@@ -705,190 +783,182 @@ No socket-level authentication middleware is found in the codebase. Registration
 
 **Behavior:**
 
-1. If `name` or `email` is missing → silently returns (no response emitted).
+1. If `name` or `email` is missing → emits `registration-error`.
 2. Queries the database via `Users.getByEmail(email)`.
 3. If user not found → emits `registration-error`.
-4. If database query throws → emits `registration-error`.
-5. On success → adds to `emailToSocketMap` (no response event emitted).
+4. On success → adds to `emailToSocketMap`, joins socket to room `network:<normalizedIP>`, adds to `ipToUsersMap`, and broadcasts `network:user-joined` to all other sockets on the same IP.
 
-**Possible emitted responses:**
+**Emitted responses:**
 
-`registration-error` (Server → Client):
+`registration-error`:
 
 ```json
-{ "message": "User does not exist" }
+{ "isOnline": null, "name": "<email>", "userExists": null, "message": "..." }
 ```
 
+`network:user-joined` (broadcast to network room):
+
 ```json
-{ "message": "Internal server error" }
+{
+  "email": "string",
+  "name": "string",
+  "onlineUsers": [{ "email": "string", "name": "string" }]
+}
 ```
 
 ---
 
-### 6.2 `offer`
+### 6.2 `connection:request`
 
-**Direction:** Client → Server (then forwarded Server → Client)  
-**Source:** `singalling.ts` lines 51–61
+**Direction:** Client → Server
 
-**Client sends:**
-
-```json
-{
-  "from": "sender email",
-  "to": "target email",
-  "offer": "RTCSessionDescriptionInit"
-}
-```
-
-**If target user is online** — emits `offer` to target socket:
+**Payload:**
 
 ```json
-{
-  "offer": "RTCSessionDescriptionInit",
-  "from": "sender email"
-}
+{ "from": "sender email", "to": "target email" }
 ```
 
-**If target user is NOT online** — emits `user-status` back to sender:
+**Behavior:**
 
-```json
-{ "isOnline": false, "message": "user offline" }
-```
+1. Validates target user exists in database.
+2. If target is online → emits `status-update` (`isOnline: true`) to sender and forwards `connection:incoming` to target.
+3. If target is offline → emits `status-update` (`isOnline: false`) to sender.
 
 ---
 
-### 6.3 `answer`
+### 6.3 `connection:response`
 
-**Direction:** Client → Server (then forwarded Server → Client)  
-**Source:** `singalling.ts` lines 63–72
+**Direction:** Client → Server
 
-**Client sends:**
-
-```json
-{
-  "from": "sender email",
-  "to": "target email",
-  "answer": "RTCSessionDescriptionInit"
-}
-```
-
-**If target user is online** — emits `answer` to target socket:
+**Payload:**
 
 ```json
-{
-  "answer": "RTCSessionDescriptionInit",
-  "from": "sender email"
-}
+{ "from": "string", "to": "string", "accepted": true }
 ```
 
-**If target user is NOT online** — emits `user-status` back to sender:
+**Behavior:**
 
-```json
-{ "isOnline": false, "message": "user offline" }
-```
+- Forwards the response to the initiator. No peer tracking on this event.
 
 ---
 
-### 6.4 `ice-candidate`
+### 6.4 `users:connected`
 
-**Direction:** Client → Server (then forwarded Server → Client)  
-**Source:** `singalling.ts` lines 75–85
+**Direction:** Client → Server
 
-**Client sends:**
-
-```json
-{
-  "from": "sender email",
-  "to": "target email",
-  "candidate": "RTCIceCandidateInit"
-}
-```
-
-**If target user is online** — emits `ice-candidate` to target socket:
+**Payload:**
 
 ```json
-{
-  "candidate": "RTCIceCandidateInit",
-  "from": "sender email"
-}
-```
-
-**If target user is NOT online** — emits `user-status` back to sender:
-
-```json
-{ "isOnline": false, "message": "user offline" }
-```
-
----
-
-### 6.5 `users:connected`
-
-**Direction:** Client → Server  
-**Source:** `singalling.ts` lines 87–94
-
-**Client sends:**
-
-```json
-{
-  "initiator": "email of the user who created the offer",
-  "receiver": "email of the user who received the offer"
-}
+{ "initiator": "string", "receiver": "string" }
 ```
 
 **Behavior:**
 
 - Stores bidirectional mapping in `activePeers` map: `initiator ↔ receiver`.
-- No response event is emitted.
 
 ---
 
-### 6.6 `disconnect` (automatic)
+### 6.5 `network:users`
 
-**Direction:** Automatic (triggered by Socket.IO on connection loss)  
-**Source:** `singalling.ts` lines 96–114
+**Direction:** Client → Server
+
+**Payload:** *(none)*
+
+**Response:**
+
+`network:users` (Server → Client):
+
+```json
+[
+  { "email": "string", "name": "string" }
+]
+```
+
+Returns all registered users connected from the same IP.
+
+---
+
+### 6.6 WebRTC Signaling (`offer`, `answer`, `ice-candidate`)
+
+**Direction:** Client → Server (forwarded Server → Client)
+
+**Client sends:**
+
+```json
+{
+  "from": "sender email",
+  "to": "target email",
+  "offer"/"answer"/"candidate": "..."
+}
+```
+
+**If target is online** → forwards payload to target.  
+**If target is offline** → emits `user-status` back to sender:
+
+```json
+{ "isOnline": false, "message": "user offline" }
+```
+
+---
+
+### 6.7 `disconnect` (automatic)
 
 **Behavior:**
 
 1. Looks up the disconnected socket's email via `getEmailBySocketId`.
-2. If email not found → returns (no action).
-3. Checks `activePeers` map for a connected peer.
-4. If no peer found → returns (only cleans up emailToSocketMap).
-5. If peer found → emits `user-status` to the peer's socket.
-6. Cleans up both entries from `activePeers` and removes from `emailToSocketMap`.
+2. If connected to an active peer → emits `peer:disconnected` to the peer's socket and cleans up `activePeers`.
+3. If registered on a network IP → removes from `ipToUsersMap` and broadcasts `network:user-left` to the remaining room members.
+4. Removes from `emailToSocketMap`.
 
-**Emitted to peer** (`user-status`, Server → Client):
+**Emitted to peer** (`peer:disconnected`):
 
 ```json
 {
-  "isOnline": false,
-  "message": "<name> went offline"
+  "name": "string",
+  "email": "string",
+  "message": "<name> went offline. Try again later"
 }
 ```
 
-Where `<name>` is the registered name of the disconnected user, or `"User"` if lookup fails.
+**Emitted to network room** (`network:user-left`):
+
+```json
+{
+  "email": "string",
+  "onlineUsers": [{ "email": "string", "name": "string" }]
+}
+```
 
 ---
 
-### 6.7 Summary of Server → Client Events
+### 6.8 Summary of Server → Client Events
 
-| Event Name           | When Emitted                                                                   |
-| -------------------- | ------------------------------------------------------------------------------ |
-| `registration-error` | `register` fails (user not in DB or internal error)                            |
-| `offer`              | Forwarded from another peer                                                    |
-| `answer`             | Forwarded from another peer                                                    |
-| `ice-candidate`      | Forwarded from another peer                                                    |
-| `user-status`        | Target user offline (on offer/answer/ice-candidate) OR active peer disconnects |
+| Event Name           | When Emitted                                                                    |
+| -------------------- | ------------------------------------------------------------------------------- |
+| `registration-error` | `user:register` fails (user not in DB or internal error)                        |
+| `network:user-joined` | A new user registered on the same network IP                                  |
+| `network:user-left`   | A user on the same network IP disconnected                                    |
+| `network:users`      | Response to a `network:users` request                                           |
+| `status-update`      | Response to `connection:request` (online/offline status)                        |
+| `connection:incoming` | Forwarded to target when someone requests a connection                         |
+| `connection:response` | Forwarded to initiator with the responder's decision                           |
+| `offer`              | Forwarded from another peer                                                     |
+| `answer`             | Forwarded from another peer                                                     |
+| `ice-candidate`      | Forwarded from another peer                                                     |
+| `user-status`        | Target user offline (on offer/answer/ice-candidate)                             |
+| `peer:disconnected`  | An active peer disconnected                                                     |
 
 ---
 
 ## 7. In-Memory Data Structures
 
-**Source:** `singalling.ts` lines 17–20
+**Source:** `src/utils/networkStore.ts`
 
-| Map                | Key Type         | Value Type                           | Purpose                              |
-| ------------------ | ---------------- | ------------------------------------ | ------------------------------------ |
-| `emailToSocketMap` | `string` (email) | `{ socketId: string, name: string }` | Maps registered emails to socket IDs |
-| `activePeers`      | `string` (email) | `string` (peer email)                | Tracks active P2P connections        |
+| Map                | Key Type         | Value Type                           | Purpose                                    |
+| ------------------ | ---------------- | ------------------------------------ | ------------------------------------------ |
+| `emailToSocketMap` | `string` (email) | `{ socketId: string, name: string }` | Maps registered emails to socket IDs       |
+| `activePeers`      | `string` (email) | `string` (peer email)                | Tracks active P2P connections              |
+| `ipToUsersMap`     | `string` (IP)    | `Set<string>` (emails)               | Groups connected users by their client IP  |
 
 ---
 
@@ -921,12 +991,14 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 
 ```
 1. Both clients connect via Socket.IO
-2. Both emit "register" with { email, name } → server validates against DB
-3. Initiator emits "offer" → server forwards to receiver
-4. Receiver emits "answer" → server forwards to initiator
-5. Both exchange "ice-candidate" events
-6. Once WebRTC connection established, either side emits "users:connected"
-7. On disconnect, server automatically notifies the peer via "user-status"
+2. Both emit "user:register" with { email, name } → server validates against DB, joins network room
+3. Initiator emits "connection:request" → server checks online status, forwards to target
+4. Target responds with "connection:response" → server forwards back to initiator
+5. Initiator emits "offer" → server forwards to receiver
+6. Receiver emits "answer" → server forwards to initiator
+7. Both exchange "ice-candidate" events
+8. Once WebRTC connection established, either side emits "users:connected"
+9. On disconnect, server emits "peer:disconnected" to the connected peer
 ```
 
 ### 8.5 File Transfer Logging Flow
@@ -935,6 +1007,7 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 1. File transfer happens over WebRTC DataChannel (not implemented in backend)
 2. After completion, client calls POST /api/v1/file-transfers/complete
 3. Server resolves emails to user UUIDs and persists the record
+4. Client can retrieve transfer history via GET /api/v1/file-transfers/recent
 ```
 
 ---
@@ -995,17 +1068,16 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 
 ### `file_transfers`
 
-| Column          | Type          | Constraints              |
-| --------------- | ------------- | ------------------------ |
-| `id`            | `UUID`        | PK                       |
-| `sender`        | `UUID`        | NOT NULL, FK → users(id) |
-| `receiver`      | `UUID`        | NOT NULL, FK → users(id) |
-| `file_name`     | `TEXT`        | NOT NULL                 |
-| `file_size`     | `BIGINT`      | NOT NULL                 |
-| `file_type`     | `TEXT`        | NOT NULL                 |
-| `time_elapsed`  | `INTEGER`     | NOT NULL                 |
-| `completed_at`  | `TIMESTAMPTZ` | DEFAULT NULL             |
-| `transfer_type` | `TEXT`        | NOT NULL                 |
+| Column          | Type              | Constraints              |
+| --------------- | ----------------- | ------------------------ |
+| `id`            | `UUID`            | PK                       |
+| `sender`        | `UUID`            | NOT NULL, FK → users(id) |
+| `receiver`      | `UUID`            | NOT NULL, FK → users(id) |
+| `file_size`     | `NUMERIC(10,2)`   | NOT NULL (in MB)         |
+| `file_type`     | `TEXT`            | NOT NULL                 |
+| `time_elapsed`  | `DOUBLE PRECISION` | NOT NULL                |
+| `completed_at`  | `TIMESTAMPTZ`     | DEFAULT NULL             |
+| `transfer_type` | `TEXT`            | NOT NULL                 |
 
 ---
 
@@ -1030,8 +1102,11 @@ Where `<name>` is the registered name of the disconnected user, or `"User"` if l
 | No active sessions found              | Session service                      | `404` No user session found   |
 | Target user offline (socket)          | Signaling (offer/answer/ice)         | `user-status` event emitted   |
 | Unregistered email on socket register | Signaling                            | `registration-error` event    |
-| Active peer disconnects               | Signaling (disconnect handler)       | `user-status` event to peer   |
-| Rate limit exceeded                   | Auth login, signup, health           | `429` with text message       |
+| Active peer disconnects               | Signaling (disconnect handler)       | `peer:disconnected` event to peer |
+| Network user joins                    | Signaling (`user:register`)          | `network:user-joined` broadcast   |
+| Network user leaves                   | Signaling (disconnect handler)       | `network:user-left` broadcast     |
+| IPv4-mapped IPv6 (`::ffff:...`)       | `normalizeIP` in networkStore.ts     | Stripped to IPv4                  |
+| Rate limit exceeded                   | Auth login, signup, health           | `429` with text message           |
 
 ---
 
