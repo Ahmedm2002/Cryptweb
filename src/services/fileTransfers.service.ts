@@ -9,6 +9,23 @@ import logger from "../utils/logger/logger.js";
 class FileTransfersService {
   constructor() {}
 
+  async getRecentTransfers(
+    userId: string,
+    limit: number = 10,
+  ): Promise<ApiError | ApiResponse<any>> {
+    try {
+      const clampedLimit = Math.min(Math.max(limit, 1), 50);
+      const transfers = await FileTransfers.getRecentByUser(
+        userId,
+        clampedLimit,
+      );
+      return new ApiResponse(200, transfers, "Recent transfers fetched");
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to fetch recent transfers");
+      return new ApiError(500, CONSTANTS.SERVER_ERROR);
+    }
+  }
+
   async saveTransferComplete(data: any): Promise<ApiError | ApiResponse<any>> {
     const {
       senderEmail,
