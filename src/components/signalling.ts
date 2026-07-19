@@ -10,6 +10,12 @@ import type {
   WebRTCUsersConnectedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
+import {
+  emailToSocketMap,
+  activePeers,
+  ipToUsersMap,
+  normalizeIP,
+} from "../utils/networkStore.js";
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -20,12 +26,9 @@ const io = new Server(httpServer, {
   transports: ["websocket"],
 });
 
-const emailToSocketMap: Map<string, { socketId: string; name: string }> =
-  new Map();
-const activePeers: Map<string, string> = new Map();
-
 io.on("connection", (socket: Socket) => {
-  logger.info({ socketId: socket.id }, "Authenticated client connected");
+  const clientIP = getClientIP(socket);
+  logger.info({ socketId: socket.id, ip: clientIP }, "Authenticated client connected");
 
   socket.on("user:register", async ({ email, name }) => {
     if (!name || !email) {
@@ -59,8 +62,24 @@ io.on("connection", (socket: Socket) => {
       } else {
         emailToSocketMap.set(email, { socketId: socket.id, name });
       }
+
+      const room = `network:${clientIP}`;
+      socket.join(room);
+      if (!ipToUsersMap.has(clientIP)) {
+        ipToUsersMap.set(clientIP, new Set());
+      }
+      ipToUsersMap.get(clientIP)!.add(email);
+
+      io.to(room).emit("network:user-joined", {
+        email,
+        name,
+        onlineUsers: Array.from(ipToUsersMap.get(clientIP)!).map(
+          (e) => ({ email: e, name: emailToSocketMap.get(e)?.name || e }),
+        ),
+      });
+
       logger.info(
-        { socketId: socket.id, email },
+        { socketId: socket.id, email, ip: clientIP },
         "User registered for signaling",
       );
     } catch (err) {
@@ -72,6 +91,19 @@ io.on("connection", (socket: Socket) => {
         message: CONSTANTS.SERVER_ERROR,
       });
     }
+  });
+
+  socket.on("network:users", () => {
+    const users = ipToUsersMap.get(clientIP);
+    if (!users) {
+      socket.emit("network:users", []);
+      return;
+    }
+    const onlineUsers = Array.from(users).map((email) => ({
+      email,
+      name: emailToSocketMap.get(email)?.name || email,
+    }));
+    socket.emit("network:users", onlineUsers);
   });
 
   socket.on(
@@ -193,9 +225,24 @@ io.on("connection", (socket: Socket) => {
         activePeers.delete(email);
         activePeers.delete(peerEmail);
       }
+
+      const usersOnIP = ipToUsersMap.get(clientIP);
+      if (usersOnIP) {
+        usersOnIP.delete(email);
+        if (usersOnIP.size === 0) {
+          ipToUsersMap.delete(clientIP);
+        } else {
+          io.to(`network:${clientIP}`).emit("network:user-left", {
+            email,
+            onlineUsers: Array.from(usersOnIP).map(
+              (e) => ({ email: e, name: emailToSocketMap.get(e)?.name || e }),
+            ),
+          });
+        }
+      }
     }
     removeEmailFromMap(socket.id);
-    logger.info({ socketId: socket.id }, "Client disconnected");
+    logger.info({ socketId: socket.id, ip: clientIP }, "Client disconnected");
   });
 
   // *------------------------------------ WebRTC Signalling Events ---------------------------------------*
@@ -241,7 +288,7 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-export { httpServer, emailToSocketMap };
+export { httpServer };
 
 // **************************************** Helper Functions ********************************************
 function removeEmailFromMap(id: string) {
@@ -256,3 +303,16 @@ function getEmailBySocketId(id: string): string | null {
   const entry = sockets.find(([_, value]) => value.socketId === id);
   return entry ? entry[0] : null;
 }
+
+function getClientIP(socket: Socket): string {
+  const fwd = socket.handshake.headers["x-forwarded-for"];
+  if (typeof fwd === "string" && fwd) {
+    return normalizeIP(fwd.split(",")[0]!.trim());
+  }
+  if (Array.isArray(fwd) && fwd[0]) {
+    return normalizeIP(fwd[0].split(",")[0]!.trim());
+  }
+  return normalizeIP(socket.handshake.address);
+}
+
+

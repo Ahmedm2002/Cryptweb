@@ -6,7 +6,7 @@ import ApiResponse from "../utils/responses/ApiResponse.js";
 import isValidUuid from "../utils/helperFuncs/isValidUuid.js";
 import logger from "../utils/logger/logger.js";
 import Users from "../repositories/user.repo.js";
-import { emailToSocketMap } from "../components/signalling.js";
+import { emailToSocketMap } from "../utils/networkStore.js";
 import isValidEmail from "../utils/helperFuncs/isValidEmail.js";
 class UserSessionService {
   constructor() {}
