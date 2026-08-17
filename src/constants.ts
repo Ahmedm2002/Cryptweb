@@ -4,10 +4,16 @@ const CONSTANTS: CONSTS = {
   SERVER_ERROR: "Something went wrong at our end. Please Try again later",
   cookieOpts: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     path: "/",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
+  },
+  clearCookieOpts: {
+    httpOnly: true,
+    secure: true,
+    path: "/",
+    sameSite: "none",
   },
   OTP_EXPIRY_MS: 300000,
 };

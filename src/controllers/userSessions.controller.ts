@@ -32,10 +32,9 @@ async function invalidateSession(req: Request, res: Response) {
   try {
     const response = await userSessionServ.invalidateSession(sessionId);
     return res
-      .clearCookie("accessToken")
-      .clearCookie("refreshToken")
-      .clearCookie("deviceId")
-      .clearCookie("sessionId")
+      .clearCookie("accessToken", CONSTANTS.clearCookieOpts)
+      .clearCookie("refreshToken", CONSTANTS.clearCookieOpts)
+      .clearCookie("sessionId", CONSTANTS.clearCookieOpts)
       .status(response.statusCode)
       .json(response);
   } catch (error: any) {

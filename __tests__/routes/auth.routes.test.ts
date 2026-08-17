@@ -157,6 +157,65 @@ describe("Auth Routes", () => {
 
       expect(res.headers["set-cookie"]).toBeUndefined();
     });
+
+    it("should set cookies with httpOnly, secure, sameSite=none for cross-origin", async () => {
+      (authServ.login as jest.Mock).mockResolvedValue(
+        new ApiResponse(200, {
+          user: validUser,
+          accessToken: "access-token-123",
+          refreshToken: "refresh-token-123",
+          sessionId: "session-id-123",
+        }, "logged in successfully")
+      );
+
+      const res = await request(app)
+        .post("/api/v1/auth/login")
+        .send({ email: "test@example.com", password: "Password123" })
+        .set("User-Agent", "TestBrowser/1.0");
+
+      const cookies = res.headers["set-cookie"] as unknown as string[];
+      expect(cookies).toBeDefined();
+      expect(cookies.length).toBe(3);
+
+      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="))!;
+      const refreshCookie = cookies.find((c: string) => c.startsWith("refreshToken="))!;
+      const sessionCookie = cookies.find((c: string) => c.startsWith("sessionId="))!;
+
+      expect(accessCookie).toContain("HttpOnly");
+      expect(accessCookie).toContain("Secure");
+      expect(accessCookie).toContain("SameSite=None");
+      expect(accessCookie).toContain("Path=/");
+
+      expect(refreshCookie).toContain("HttpOnly");
+      expect(refreshCookie).toContain("Secure");
+      expect(refreshCookie).toContain("SameSite=None");
+      expect(refreshCookie).toContain("Path=/");
+
+      expect(sessionCookie).toContain("HttpOnly");
+      expect(sessionCookie).toContain("Secure");
+      expect(sessionCookie).toContain("SameSite=None");
+      expect(sessionCookie).toContain("Path=/");
+    });
+
+    it("should set cookies with correct maxAge of 1 day", async () => {
+      (authServ.login as jest.Mock).mockResolvedValue(
+        new ApiResponse(200, {
+          user: validUser,
+          accessToken: "access-token-123",
+          refreshToken: "refresh-token-123",
+          sessionId: "session-id-123",
+        }, "logged in successfully")
+      );
+
+      const res = await request(app)
+        .post("/api/v1/auth/login")
+        .send({ email: "test@example.com", password: "Password123" });
+
+      const cookies = res.headers["set-cookie"] as unknown as string[];
+      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="))!;
+      const expectedMaxAge = 24 * 60 * 60;
+      expect(accessCookie).toContain(`Max-Age=${expectedMaxAge}`);
+    });
   });
 
   describe("POST /api/v1/auth/signup", () => {

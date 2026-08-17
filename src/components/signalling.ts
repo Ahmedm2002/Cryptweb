@@ -28,7 +28,10 @@ const io = new Server(httpServer, {
 
 io.on("connection", (socket: Socket) => {
   const clientIP = getClientIP(socket);
-  logger.info({ socketId: socket.id, ip: clientIP }, "Authenticated client connected");
+  logger.info(
+    { socketId: socket.id, ip: clientIP },
+    "Authenticated client connected",
+  );
 
   socket.on("user:register", async ({ email, name }) => {
     if (!name || !email) {
@@ -73,9 +76,10 @@ io.on("connection", (socket: Socket) => {
       io.to(room).emit("network:user-joined", {
         email,
         name,
-        onlineUsers: Array.from(ipToUsersMap.get(clientIP)!).map(
-          (e) => ({ email: e, name: emailToSocketMap.get(e)?.name || e }),
-        ),
+        onlineUsers: Array.from(ipToUsersMap.get(clientIP)!).map((e) => ({
+          email: e,
+          name: emailToSocketMap.get(e)?.name || e,
+        })),
       });
 
       logger.info(
@@ -207,6 +211,30 @@ io.on("connection", (socket: Socket) => {
     );
   });
 
+  socket.on("peer:disconnect-intentional", (data: { email: string }) => {
+    const peerEmail = activePeers.get(data.email);
+    if (!peerEmail) return;
+
+    const peerInfo = emailToSocketMap.get(peerEmail);
+    const disconnectedUser = emailToSocketMap.get(data.email);
+    const name = disconnectedUser?.name || data.email;
+
+    if (peerInfo) {
+      io.to(peerInfo.socketId).emit("peer:ended", {
+        name,
+        email: data.email,
+        message: `${name} ended the connection`,
+      });
+    }
+
+    activePeers.delete(data.email);
+    activePeers.delete(peerEmail);
+    logger.info(
+      { email: data.email, peerEmail },
+      "Peer intentionally disconnected",
+    );
+  });
+
   socket.on("disconnect", () => {
     const email = getEmailBySocketId(socket.id);
     if (email) {
@@ -234,9 +262,10 @@ io.on("connection", (socket: Socket) => {
         } else {
           io.to(`network:${clientIP}`).emit("network:user-left", {
             email,
-            onlineUsers: Array.from(usersOnIP).map(
-              (e) => ({ email: e, name: emailToSocketMap.get(e)?.name || e }),
-            ),
+            onlineUsers: Array.from(usersOnIP).map((e) => ({
+              email: e,
+              name: emailToSocketMap.get(e)?.name || e,
+            })),
           });
         }
       }
@@ -314,5 +343,3 @@ function getClientIP(socket: Socket): string {
   }
   return normalizeIP(socket.handshake.address);
 }
-
-

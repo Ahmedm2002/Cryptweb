@@ -157,6 +157,12 @@ describe("User Sessions Routes", () => {
       const cookies = res.headers["set-cookie"] as unknown as string[];
       expect(cookies.some((c: string) => c.startsWith("accessToken=;"))).toBe(true);
       expect(cookies.some((c: string) => c.startsWith("refreshToken=;"))).toBe(true);
+      expect(cookies.some((c: string) => c.startsWith("sessionId=;"))).toBe(true);
+      const accessClearCookie = cookies.find((c: string) => c.startsWith("accessToken=;"))!;
+      expect(accessClearCookie).toContain("Path=/");
+      expect(accessClearCookie).toContain("SameSite=None");
+      expect(accessClearCookie).toContain("Secure");
+      expect(accessClearCookie).toContain("HttpOnly");
     });
 
     it("should return 401 when not authenticated", async () => {
@@ -246,7 +252,11 @@ describe("User Sessions Routes", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.accessToken).toBe("new-access-token");
       const cookies = res.headers["set-cookie"] as unknown as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken=new-access-token"))).toBe(true);
+      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken=new-access-token"))!;
+      expect(accessCookie).toContain("HttpOnly");
+      expect(accessCookie).toContain("Secure");
+      expect(accessCookie).toContain("SameSite=None");
+      expect(accessCookie).toContain("Path=/");
     });
 
     it("should return 400 when refresh token is missing", async () => {

@@ -3,11 +3,21 @@ import type { userSessionI } from "../interfaces/user-sessions.model.js";
 import UserSession from "../repositories/user_session.repo.js";
 import ApiError from "../utils/responses/ApiError.js";
 import ApiResponse from "../utils/responses/ApiResponse.js";
-import isValidUuid from "../utils/helperFuncs/isValidUuid.js";
+import { ObjectId } from "mongodb";
 import logger from "../utils/logger/logger.js";
 import Users from "../repositories/user.repo.js";
 import { emailToSocketMap } from "../utils/networkStore.js";
 import isValidEmail from "../utils/helperFuncs/isValidEmail.js";
+function sanitizeUser(user: any) {
+  const { password_hash: _, ...safe } = user;
+  return safe;
+}
+
+function sanitizeSession(session: any) {
+  const { refresh_token: _, ...safe } = session;
+  return safe;
+}
+
 class UserSessionService {
   constructor() {}
   /**
@@ -17,7 +27,7 @@ class UserSessionService {
    */
   async getAllSessions(userId: string): Promise<ApiError | ApiResponse<any>> {
     if (!userId) return new ApiError(400, "User id required");
-    if (!isValidUuid(userId)) {
+    if (!ObjectId.isValid(userId)) {
       return new ApiError(400, "Invalid user id");
     }
     try {
@@ -27,7 +37,7 @@ class UserSessionService {
       }
       return new ApiResponse<any>(
         200,
-        sessions,
+        sessions.map(sanitizeSession),
         "sessions fetched successfully",
       );
     } catch (error: any) {
@@ -41,7 +51,7 @@ class UserSessionService {
     if (!sessionId) {
       return new ApiError(400, "Required fields missing");
     }
-    if (!isValidUuid(sessionId)) {
+    if (!ObjectId.isValid(sessionId)) {
       return new ApiError(400, "Invalid user id");
     }
     try {
@@ -59,7 +69,7 @@ class UserSessionService {
   async deleteAllSessions(
     userId: string,
   ): Promise<ApiError | ApiResponse<string[]>> {
-    if (!isValidUuid(userId)) {
+    if (!ObjectId.isValid(userId)) {
       return new ApiError(400, "Invalid user id");
     }
     try {
@@ -84,7 +94,7 @@ class UserSessionService {
     if (!userId || !sessionId) {
       return new ApiError(400, "Missing Fields");
     }
-    if (!isValidUuid(userId) || !isValidUuid(sessionId)) {
+    if (!ObjectId.isValid(userId) || !ObjectId.isValid(sessionId)) {
       return new ApiError(400, "Invalid id");
     }
 
@@ -100,7 +110,7 @@ class UserSessionService {
 
       return new ApiResponse(
         200,
-        { user, session },
+        { user: sanitizeUser(user), session: sanitizeSession(session) },
         "Session retrieved successfully",
       );
     } catch (error) {
