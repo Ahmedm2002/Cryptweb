@@ -1,5 +1,4 @@
 import { getDb } from "../configs/db.js";
-import { ObjectId } from "mongodb";
 import logger from "../utils/logger/logger.js";
 
 export interface CreateFileTransferDTO {
@@ -37,79 +36,29 @@ class FileTransfersRepository {
     }
   }
 
-  async getRecentByUser(
-    userId: string,
-    limit: number = 10,
-    page: number = 1,
-  ) {
+  async getRecentByUser(userId: string, limit: number = 10, page: number = 1) {
     try {
       const skip = (page - 1) * limit;
       const matchStage = {
         $or: [{ sender: userId }, { receiver: userId }],
       };
 
-      const [results, totalSent, totalReceived] = await Promise.all([
+      const [results, total] = await Promise.all([
         this.col()
-          .aggregate([
-            { $match: matchStage },
-            { $sort: { completed_at: -1 } },
-            { $skip: skip },
-            { $limit: limit },
-            {
-              $lookup: {
-                from: "users",
-                localField: "sender",
-                foreignField: "_id",
-                as: "senderDoc",
-              },
-            },
-            {
-              $lookup: {
-                from: "users",
-                localField: "receiver",
-                foreignField: "_id",
-                as: "receiverDoc",
-              },
-            },
-            {
-              $unwind: {
-                path: "$senderDoc",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $unwind: {
-                path: "$receiverDoc",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                id: { $toString: "$_id" },
-                fileSize: "$file_size",
-                fileType: "$file_type",
-                timeElapsed: "$time_elapsed",
-                transferType: "$transfer_type",
-                completedAt: "$completed_at",
-                senderName: "$senderDoc.name",
-                senderEmail: "$senderDoc.email",
-                receiverName: "$receiverDoc.name",
-                receiverEmail: "$receiverDoc.email",
-              },
-            },
-          ])
+          .find(matchStage)
+          .sort({ completed_at: -1 })
+          .skip(skip)
+          .limit(limit)
           .toArray(),
-        this.col().countDocuments({ sender: userId }),
-        this.col().countDocuments({ receiver: userId }),
+        this.col().countDocuments(matchStage),
       ]);
 
-      return {
-        transfers: results,
-        totalSent,
-        totalReceived,
-        total: totalSent + totalReceived,
-      };
+      const transfers = results.map((doc) => {
+        const { _id, sender, receiver, ...rest } = doc;
+        return { id: _id.toHexString(), ...rest };
+      });
+
+      return { transfers, total };
     } catch (error: any) {
       logger.error(
         { err: error, userId },

@@ -17,18 +17,15 @@ class FileTransfersService {
     try {
       const clampedLimit = Math.min(Math.max(limit, 1), 50);
       const clampedPage = Math.max(page, 1);
-      const { transfers, totalSent, totalReceived, total } =
-        await FileTransfers.getRecentByUser(userId, clampedLimit, clampedPage);
+      const { transfers, total } = await FileTransfers.getRecentByUser(
+        userId,
+        clampedLimit,
+        clampedPage,
+      );
       const totalPages = Math.ceil(total / clampedLimit);
       return new ApiResponse(
         200,
-        {
-          transfers,
-          pageNo: clampedPage,
-          totalPages,
-          totalSent,
-          totalReceived,
-        },
+        { transfers, pageNo: clampedPage, totalPages },
         "Recent transfers fetched",
       );
     } catch (error: any) {
