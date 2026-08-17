@@ -1,70 +1,81 @@
-import { pool } from "../configs/db.js";
-import type { QueryResult } from "pg";
+import { getDb } from "../configs/db.js";
 import type { PasswordResetI } from "../interfaces/password-reset.model.js";
+import { ObjectId } from "mongodb";
 
 class ResetPasswordRepo {
   constructor() {}
+
+  private col() {
+    return getDb().collection<PasswordResetI & { _id: ObjectId }>(
+      "password_reset_tokens",
+    );
+  }
+
   async insertToken(userId: string, tokenHash: string): Promise<string> {
     try {
-      const response: QueryResult = await pool.query(
-        `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-          VALUES ($1, $2, NOW() + INTERVAL '5 min')
-          ON CONFLICT (user_id)
-          DO UPDATE SET
-              token_hash = $2,
-              created_at = NOW(),
-              revoked_at = NOW(),
-              expires_at = NOW() + INTERVAL '5 min'
-          RETURNING *`,
-        [userId, tokenHash],
-      );
-      return response.rows[0].id;
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      const now = new Date();
+
+      const existing = await this.col().findOne({ user_id: userId });
+
+      if (existing) {
+        await this.col().updateOne(
+          { _id: existing._id },
+          {
+            $set: {
+              token_hash: tokenHash,
+              created_at: now,
+              revoked_at: now,
+              expires_at: expiresAt,
+            },
+          },
+        );
+        return existing._id.toHexString();
+      }
+
+      const result = await this.col().insertOne({
+        user_id: userId,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+        created_at: now,
+      } as any);
+      return result.insertedId.toHexString();
     } catch (error: any) {
       throw new Error(
         "Error inserting token for password recovery token table",
       );
     }
   }
+
   async setTokenUsedAt(tokenId: string): Promise<string> {
     try {
-      const response: QueryResult = await pool.query(
-        "Update password_reset_tokens set used_at = NOW() where id = $1 AND expires_at is not null returning id",
-        [tokenId],
+      await this.col().updateOne(
+        { _id: new ObjectId(tokenId), expires_at: { $exists: true } },
+        { $set: { used_at: new Date() } },
       );
-      return response.rows[0];
+      return tokenId;
     } catch (error: any) {
       throw new Error("Error updating token for password recovery token table");
     }
   }
-  /**
-   *
-   * @param userId
-   * @returns
-   */
-  async getUserToken(userId: string): Promise<PasswordResetI> {
+
+  async getUserToken(userId: string): Promise<PasswordResetI | null> {
     try {
-      const response: QueryResult = await pool.query(
-        "Select id, token_hash, used_at, expires_at, user_id from password_reset_tokens where user_id = $1",
-        [userId],
-      );
-      return response.rows[0];
+      const doc = await this.col().findOne({ user_id: userId });
+      if (!doc) return null;
+      const { _id, ...rest } = doc;
+      return { ...rest, id: _id.toHexString() } as PasswordResetI;
     } catch (error) {
       throw new Error("Error retrieving user password recovery token");
     }
   }
 
-  /**
-   *
-   * @param tokenHash
-   * @returns
-   */
-  async getTokenByHash(tokenHash: string): Promise<PasswordResetI> {
+  async getTokenByHash(tokenHash: string): Promise<PasswordResetI | null> {
     try {
-      const response: QueryResult = await pool.query(
-        "Select id, token_hash, used_at, expires_at, user_id from password_reset_tokens where token_hash = $1",
-        [tokenHash],
-      );
-      return response.rows[0];
+      const doc = await this.col().findOne({ token_hash: tokenHash });
+      if (!doc) return null;
+      const { _id, ...rest } = doc;
+      return { ...rest, id: _id.toHexString() } as PasswordResetI;
     } catch (error) {
       throw new Error("Error retrieving token by hash");
     }

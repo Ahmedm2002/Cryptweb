@@ -1,15 +1,15 @@
 services:
   db:
-    image: postgres:latest
-    container_name: pg_database
+    image: mongo:latest
+    container_name: mongodb
     environment:
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_DB=${DATABASE_NAME}
+      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}
+      - MONGO_INITDB_DATABASE=${DATABASE_NAME}
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - data:/var/lib/postgresql/
+      - mongodb_data:/data/db
     networks:
       - cryptweb
 
@@ -36,7 +36,7 @@ services:
   #     - "49152-65535:49152-65535/udp"
 
 volumes:
-  data:
+  mongodb_data:
 
 networks:
   cryptweb:

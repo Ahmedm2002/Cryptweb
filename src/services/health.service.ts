@@ -1,6 +1,6 @@
 import ApiResponse from "../utils/responses/ApiResponse.js";
 import ApiError from "../utils/responses/ApiError.js";
-import { pool } from "../configs/db.js";
+import { getDb } from "../configs/db.js";
 
 class HealthService {
   constructor() {}
@@ -20,7 +20,7 @@ class HealthService {
 
     try {
       const dbStartTime = Date.now();
-      await pool.query("SELECT 1");
+      await getDb().command({ ping: 1 });
       dbLatency = `${Date.now() - dbStartTime} ms`;
     } catch (error) {
       dbStatus = "down";

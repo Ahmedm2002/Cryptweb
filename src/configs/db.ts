@@ -1,26 +1,22 @@
-import { Pool } from "pg";
+import { MongoClient, type Db } from "mongodb";
 import logger from "../utils/logger/logger.js";
 
-const pool: Pool = new Pool({
-  host: process.env.DATABASE_HOST,
-  port: Number(process.env.DATABASE_PORT),
-  database: process.env.DATABASE_NAME,
-  user: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  max: 20,
-});
+const client: MongoClient = new MongoClient(
+  process.env.MONGODB_URI ?? "mongodb://localhost:27017",
+);
 
-function testConnection() {
-  pool
-    .connect()
-    .then((client) => {
-      logger.info("Database connected");
-      client.release();
-    })
-    .catch((err) => {
-      logger.error({ err }, "Database connection error");
-    });
+let db: Db;
+
+async function connectDB(): Promise<Db> {
+  await client.connect();
+  db = client.db(process.env.MONGODB_DB_NAME ?? "cryptweb");
+  logger.info("MongoDB connected");
+  return db;
 }
 
-testConnection();
-export { pool };
+function getDb(): Db {
+  if (!db) throw new Error("Database not initialized. Call connectDB first.");
+  return db;
+}
+
+export { client, connectDB, getDb };

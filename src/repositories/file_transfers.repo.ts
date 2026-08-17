@@ -1,5 +1,5 @@
-import { pool } from "../configs/db.js";
-import type { QueryResult } from "pg";
+import { getDb } from "../configs/db.js";
+import { ObjectId } from "mongodb";
 import logger from "../utils/logger/logger.js";
 
 export interface CreateFileTransferDTO {
@@ -12,22 +12,22 @@ export interface CreateFileTransferDTO {
 }
 
 class FileTransfersRepository {
+  private col() {
+    return getDb().collection("file_transfers");
+  }
+
   async createTransfer(data: CreateFileTransferDTO) {
     try {
-      const result: QueryResult = await pool.query(
-        `INSERT INTO file_transfers 
-          (sender, receiver, file_size, file_type, time_elapsed, completed_at, transfer_type) 
-         VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING id`,
-        [
-          data.sender,
-          data.receiver,
-          data.fileSize,
-          data.fileType,
-          data.timeElapsed,
-          data.transferType,
-        ],
-      );
-      return result.rows[0];
+      const result = await this.col().insertOne({
+        sender: data.sender,
+        receiver: data.receiver,
+        file_size: data.fileSize,
+        file_type: data.fileType,
+        time_elapsed: data.timeElapsed,
+        completed_at: new Date(),
+        transfer_type: data.transferType,
+      });
+      return { id: result.insertedId.toHexString() };
     } catch (error: any) {
       logger.error(
         { err: error, data },
@@ -39,27 +39,55 @@ class FileTransfersRepository {
 
   async getRecentByUser(userId: string, limit: number = 10) {
     try {
-      const result: QueryResult = await pool.query(
-        `SELECT
-          ft.id,
-          ft.file_size AS "fileSize",
-          ft.file_type AS "fileType",
-          ft.time_elapsed AS "timeElapsed",
-          ft.transfer_type AS "transferType",
-          ft.completed_at AS "completedAt",
-          senderUser.name AS "senderName",
-          senderUser.email AS "senderEmail",
-          receiverUser.name AS "receiverName",
-          receiverUser.email AS "receiverEmail"
-         FROM file_transfers ft
-         JOIN users senderUser ON ft.sender = senderUser.id
-         JOIN users receiverUser ON ft.receiver = receiverUser.id
-         WHERE ft.sender = $1 OR ft.receiver = $1
-         ORDER BY ft.completed_at DESC NULLS LAST
-         LIMIT $2`,
-        [userId, limit],
-      );
-      return result.rows;
+      const results = await this.col()
+        .aggregate([
+          {
+            $match: {
+              $or: [{ sender: userId }, { receiver: userId }],
+            },
+          },
+          { $sort: { completed_at: -1 } },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: "users",
+              localField: "sender",
+              foreignField: "_id",
+              as: "senderDoc",
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "receiver",
+              foreignField: "_id",
+              as: "receiverDoc",
+            },
+          },
+          {
+            $unwind: { path: "$senderDoc", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $unwind: { path: "$receiverDoc", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $project: {
+              _id: 0,
+              id: { $toString: "$_id" },
+              fileSize: "$file_size",
+              fileType: "$file_type",
+              timeElapsed: "$time_elapsed",
+              transferType: "$transfer_type",
+              completedAt: "$completed_at",
+              senderName: "$senderDoc.name",
+              senderEmail: "$senderDoc.email",
+              receiverName: "$receiverDoc.name",
+              receiverEmail: "$receiverDoc.email",
+            },
+          },
+        ])
+        .toArray();
+      return results;
     } catch (error: any) {
       logger.error(
         { err: error, userId },

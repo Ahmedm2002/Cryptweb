@@ -1,24 +1,21 @@
-import type { QueryResult } from "pg";
-import { pool } from "../configs/db.js";
+import { getDb } from "../configs/db.js";
 import crypto from "node:crypto";
 import type {
   userSessionI,
   DeviceInfo,
 } from "../interfaces/user-sessions.model.js";
+import { ObjectId } from "mongodb";
 import logger from "../utils/logger/logger.js";
-/**
- *
- */
+
 class UserSessionsRepo {
   constructor() {}
-  /**
-   *
-   * @param userId
-   * @param deviceId
-   * @param refreshToken
-   * @param deviceType
-   * @returns
-   */
+
+  private col() {
+    return getDb().collection<userSessionI & { _id: ObjectId }>(
+      "user_sessions",
+    );
+  }
+
   async create(
     userId: string,
     deviceId: string,
@@ -30,51 +27,44 @@ class UserSessionsRepo {
     }
 
     try {
-      const result: QueryResult<userSessionI> = await pool.query(
-        `
-        INSERT INTO user_sessions (user_id, device_id, expires_at, refresh_token, device_type)
-        VALUES ($1, $2, now() + interval '7 days', $3, $4)
-        RETURNING id
-        `,
-        [userId, deviceId, refreshTokenHash, deviceType],
-      );
-
-      return result.rows[0] ?? null;
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const result = await this.col().insertOne({
+        user_id: userId,
+        device_id: deviceId,
+        refresh_token: refreshTokenHash,
+        expires_at: expiresAt,
+        created_at: new Date(),
+        device_type: deviceType,
+      } as any);
+      return { id: result.insertedId.toHexString() };
     } catch (error: any) {
       logger.error({ err: error }, "Failed to create user session");
-      throw new Error("Error while registering user session: ", error.message);
+      throw new Error("Error while registering user session: " + error.message);
     }
   }
-  /**
-   *
-   * @param userId
-   * @returns
-   */
+
   async deleteAllSessions(userId: string): Promise<string[]> {
     try {
-      const result: QueryResult = await pool.query(
-        "delete from user_sessions where user_id = $1 returning id",
-        [userId],
-      );
-      return result.rows;
+      const result = await this.col().deleteMany({ user_id: userId });
+      return [];
     } catch (error: any) {
       logger.error({ err: error }, "Failed to delete all user sessions");
       throw new Error("Error occured during deleting user session");
     }
   }
 
-  /**
-   *
-   * @param userId
-   * @returns
-   */
   async getAll(userId: string): Promise<userSessionI[]> {
     try {
-      const session: QueryResult<userSessionI> = await pool.query(
-        "select * from user_sessions where user_id = $1 and expires_at > NOW()",
-        [userId],
-      );
-      return session.rows ?? null;
+      const docs = await this.col()
+        .find({
+          user_id: userId,
+          expires_at: { $gt: new Date() },
+        })
+        .toArray();
+      return docs.map((doc) => {
+        const { _id, ...rest } = doc;
+        return { ...rest, id: _id.toHexString() } as userSessionI;
+      });
     } catch (error: any) {
       logger.error({ err: error }, "Failed to get all user sessions");
       throw new Error("Error getting users sessions");
@@ -83,23 +73,26 @@ class UserSessionsRepo {
 
   async deleteUserSession(sessionId: string): Promise<string> {
     try {
-      const result: QueryResult = await pool.query(
-        "Delete from user_sessions where id = $1 returning id",
-        [sessionId],
-      );
-      return result.rows[0];
+      await this.col().deleteOne({ _id: new ObjectId(sessionId) });
+      return sessionId;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to delete user session");
       throw new Error("Error deleting user session");
     }
   }
-  async getSession(userId: string, sessionId: string): Promise<userSessionI> {
+
+  async getSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<userSessionI | null> {
     try {
-      const session: QueryResult = await pool.query(
-        "SELECT id, refresh_token, device_id FROM user_sessions WHERE id = $1 AND user_id = $2",
-        [sessionId, userId],
-      );
-      return session.rows[0];
+      const doc = await this.col().findOne({
+        _id: new ObjectId(sessionId),
+        user_id: userId,
+      });
+      if (!doc) return null;
+      const { _id, ...rest } = doc;
+      return { ...rest, id: _id.toHexString() } as userSessionI;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to retrieve user session");
       throw new Error("Error retreiveng user session");

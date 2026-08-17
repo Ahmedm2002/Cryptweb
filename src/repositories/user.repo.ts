@@ -1,65 +1,65 @@
-import { pool } from "../configs/db.js";
+import { getDb } from "../configs/db.js";
 import type { userI } from "../interfaces/user.model.js";
-import type { QueryResult } from "pg";
+import { ObjectId } from "mongodb";
 import logger from "../utils/logger/logger.js";
 
-/**
- *
- */
 class UsersRepo {
   constructor() {}
 
-  /**
-   *
-   * @param userId
-   * @returns
-   */
+  private col() {
+    return getDb().collection<userI & { _id: ObjectId }>("users");
+  }
+
   async getById(userId: string): Promise<userI> {
     try {
-      const result: QueryResult = await pool.query(
-        "Select name, email, verified_at, profile_picture, id from users where id = $1 AND deleted_at IS NULL",
-        [userId],
-      );
-      return result.rows[0] ?? null;
+      const doc = await this.col().findOne({
+        _id: new ObjectId(userId),
+        deleted_at: { $exists: false },
+      });
+      if (!doc) return null as any;
+      const { _id, ...rest } = doc;
+      return { ...rest, id: _id.toHexString() } as userI;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to get user by id");
       throw new Error("Error retreving user by id");
     }
   }
 
-  /**
-   *
-   * @param email
-   * @returns
-   */
   async getByEmail(email: string): Promise<userI> {
     try {
-      const result: QueryResult = await pool.query(
-        "Select name, email, verified_at, profile_picture, password_hash, id from users where email = $1 AND deleted_at IS NULL",
-        [email],
-      );
-      return result.rows[0] ?? null;
+      const doc = await this.col().findOne({
+        email,
+        deleted_at: { $exists: false },
+      });
+      if (!doc) return null as any;
+      const { _id, ...rest } = doc;
+      return { ...rest, id: _id.toHexString() } as userI;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to get user by email");
       throw new Error("Error retrieving user by email");
     }
   }
 
-  /**
-   *
-   * @param user
-   * @returns
-   */
   async createUser(
     user: Pick<userI, "name" | "password_hash" | "email">,
   ): Promise<userI> {
     const { name, email, password_hash } = user;
     try {
-      const result: QueryResult = await pool.query(
-        `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, verified_at, created_on`,
-        [name, email, password_hash],
-      );
-      return result.rows[0];
+      const now = new Date();
+      const result = await this.col().insertOne({
+        name,
+        email,
+        password_hash,
+        created_on: now,
+        updated_on: now,
+      } as any);
+      return {
+        id: result.insertedId.toHexString(),
+        name,
+        email,
+        password_hash,
+        created_on: now,
+      } as userI;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to create user");
       throw new Error("Error creating user");
@@ -68,11 +68,13 @@ class UsersRepo {
 
   async updatePassword(userId: string, updatedPasswordHash: string) {
     try {
-      const result: QueryResult = await pool.query(
-        "Update users set password_hash = $1 where id = $2 returning id",
-        [updatedPasswordHash, userId],
+      await this.col().updateOne(
+        { _id: new ObjectId(userId) },
+        {
+          $set: { password_hash: updatedPasswordHash, updated_on: new Date() },
+        },
       );
-      return result.rows[0];
+      return { id: userId };
     } catch (error: any) {
       logger.error({ err: error }, "Failed to update user password");
       throw new Error("Error updating user password");
@@ -81,84 +83,62 @@ class UsersRepo {
 
   async updateLastLogin(userId: string) {
     try {
-      const result: QueryResult = await pool.query(
-        "UPDATE users SET last_login_at = now() WHERE id = $1 RETURNING id",
-        [userId]
+      await this.col().updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { last_login_at: new Date() } },
       );
-      return result.rows[0];
+      return { id: userId };
     } catch (error: any) {
       logger.error({ err: error }, "Failed to update last login");
       throw new Error("Error updating user last login timestamp");
     }
   }
 
-  /**
-   *
-   * @param userId
-   * @returns
-   */
-  async deleteUser(userId: string): Promise<userI> {
+  async deleteUser(userId: string): Promise<void> {
     try {
-      const result: QueryResult = await pool.query(
-        "Update users set deleted_at = $1 where id = $2",
-        [new Date(), userId],
+      await this.col().updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { deleted_at: new Date() } },
       );
-      return result.rows[0] || null;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to soft-delete user");
       throw new Error("Error deleting user");
     }
   }
-  /**
-   *
-   * @param userId
-   * @param tokenId
-   * @returns
-   */
+
   async setUserVerified(userId: string, tokenId: string) {
-    const client = await pool.connect();
+    const db = getDb();
+    const session = db.client.startSession();
     try {
-      await client.query("BEGIN");
+      await session.withTransaction(async () => {
+        await db
+          .collection("users")
+          .updateOne(
+            { _id: new ObjectId(userId), verified_at: { $exists: false } },
+            { $set: { verified_at: new Date() } },
+            { session },
+          );
 
-      await client.query(
-        `UPDATE users
-       SET verified_at = now()
-       WHERE id = $1
-       AND verified_at is NULL
-       `,
-        [userId],
-      );
-
-      await client.query(
-        `UPDATE email_verification_tokens
-       SET used_at = now()
-       WHERE id = $1
-       AND used_at is NULL
-       `,
-        [tokenId],
-      );
-
-      await client.query("COMMIT");
+        await db
+          .collection("email_verification_tokens")
+          .updateOne(
+            { _id: new ObjectId(tokenId), used_at: { $exists: false } },
+            { $set: { used_at: new Date() } },
+            { session },
+          );
+      });
     } catch (error: any) {
       logger.error({ err: error }, "Failed to set user verified");
-      await client.query("ROLLBACK");
     } finally {
-      client.release();
+      await session.endSession();
     }
   }
 
-  /**
-   *
-   * @param userId
-   */
   async setVerifiedState(userId: string): Promise<void> {
     try {
-      await pool.query(
-        `UPDATE users
-         SET verified_at = now()
-         WHERE id = $1
-         AND verified_at is NULL`,
-        [userId],
+      await this.col().updateOne(
+        { _id: new ObjectId(userId), verified_at: { $exists: false } },
+        { $set: { verified_at: new Date() } },
       );
     } catch (error: any) {
       logger.error({ err: error }, "Failed to set user verified state");
