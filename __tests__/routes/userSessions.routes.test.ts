@@ -250,9 +250,9 @@ describe("User Sessions Routes", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.accessToken).toBe("new-access-token");
+      expect(res.body.data).toBeNull();
       const cookies = res.headers["set-cookie"] as unknown as string[];
-      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken=new-access-token"))!;
+      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="))!;
       expect(accessCookie).toContain("HttpOnly");
       expect(accessCookie).toContain("Secure");
       expect(accessCookie).toContain("SameSite=None");

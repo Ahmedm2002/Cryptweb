@@ -37,57 +37,79 @@ class FileTransfersRepository {
     }
   }
 
-  async getRecentByUser(userId: string, limit: number = 10) {
+  async getRecentByUser(
+    userId: string,
+    limit: number = 10,
+    page: number = 1,
+  ) {
     try {
-      const results = await this.col()
-        .aggregate([
-          {
-            $match: {
-              $or: [{ sender: userId }, { receiver: userId }],
+      const skip = (page - 1) * limit;
+      const matchStage = {
+        $or: [{ sender: userId }, { receiver: userId }],
+      };
+
+      const [results, totalSent, totalReceived] = await Promise.all([
+        this.col()
+          .aggregate([
+            { $match: matchStage },
+            { $sort: { completed_at: -1 } },
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "users",
+                localField: "sender",
+                foreignField: "_id",
+                as: "senderDoc",
+              },
             },
-          },
-          { $sort: { completed_at: -1 } },
-          { $limit: limit },
-          {
-            $lookup: {
-              from: "users",
-              localField: "sender",
-              foreignField: "_id",
-              as: "senderDoc",
+            {
+              $lookup: {
+                from: "users",
+                localField: "receiver",
+                foreignField: "_id",
+                as: "receiverDoc",
+              },
             },
-          },
-          {
-            $lookup: {
-              from: "users",
-              localField: "receiver",
-              foreignField: "_id",
-              as: "receiverDoc",
+            {
+              $unwind: {
+                path: "$senderDoc",
+                preserveNullAndEmptyArrays: true,
+              },
             },
-          },
-          {
-            $unwind: { path: "$senderDoc", preserveNullAndEmptyArrays: true },
-          },
-          {
-            $unwind: { path: "$receiverDoc", preserveNullAndEmptyArrays: true },
-          },
-          {
-            $project: {
-              _id: 0,
-              id: { $toString: "$_id" },
-              fileSize: "$file_size",
-              fileType: "$file_type",
-              timeElapsed: "$time_elapsed",
-              transferType: "$transfer_type",
-              completedAt: "$completed_at",
-              senderName: "$senderDoc.name",
-              senderEmail: "$senderDoc.email",
-              receiverName: "$receiverDoc.name",
-              receiverEmail: "$receiverDoc.email",
+            {
+              $unwind: {
+                path: "$receiverDoc",
+                preserveNullAndEmptyArrays: true,
+              },
             },
-          },
-        ])
-        .toArray();
-      return results;
+            {
+              $project: {
+                _id: 0,
+                id: { $toString: "$_id" },
+                fileSize: "$file_size",
+                fileType: "$file_type",
+                timeElapsed: "$time_elapsed",
+                transferType: "$transfer_type",
+                completedAt: "$completed_at",
+                senderName: "$senderDoc.name",
+                senderEmail: "$senderDoc.email",
+                receiverName: "$receiverDoc.name",
+                receiverEmail: "$receiverDoc.email",
+              },
+            },
+          ])
+          .toArray(),
+        this.col().countDocuments({ sender: userId }),
+        this.col().countDocuments({ receiver: userId }),
+      ]);
+
+      return {
+        transfers: results,
+        totalSent,
+        totalReceived,
+        total: totalSent + totalReceived,
+      };
     } catch (error: any) {
       logger.error(
         { err: error, userId },

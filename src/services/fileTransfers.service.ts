@@ -12,14 +12,25 @@ class FileTransfersService {
   async getRecentTransfers(
     userId: string,
     limit: number = 10,
+    page: number = 1,
   ): Promise<ApiError | ApiResponse<any>> {
     try {
       const clampedLimit = Math.min(Math.max(limit, 1), 50);
-      const transfers = await FileTransfers.getRecentByUser(
-        userId,
-        clampedLimit,
+      const clampedPage = Math.max(page, 1);
+      const { transfers, totalSent, totalReceived, total } =
+        await FileTransfers.getRecentByUser(userId, clampedLimit, clampedPage);
+      const totalPages = Math.ceil(total / clampedLimit);
+      return new ApiResponse(
+        200,
+        {
+          transfers,
+          pageNo: clampedPage,
+          totalPages,
+          totalSent,
+          totalReceived,
+        },
+        "Recent transfers fetched",
       );
-      return new ApiResponse(200, transfers, "Recent transfers fetched");
     } catch (error: any) {
       logger.error({ err: error }, "Failed to fetch recent transfers");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);

@@ -3,22 +3,27 @@ import request from "supertest";
 
 const passThrough = (_req: unknown, _res: unknown, next: () => void) => next();
 
-jest.unstable_mockModule("../../src/middlewares/rateLimitter.middleware.js", () => ({
-  default: { authLimiter: passThrough, generalLimiter: passThrough },
-}));
+jest.unstable_mockModule(
+  "../../src/middlewares/rateLimitter.middleware.js",
+  () => ({
+    default: { authLimiter: passThrough, generalLimiter: passThrough },
+  }),
+);
 
 jest.unstable_mockModule("../../src/services/auth.service.js", () => ({
   default: {
     login: jest.fn(),
     signup: jest.fn(),
-    googleLogin: jest.fn(),
   },
 }));
 
 const { app } = await import("../../src/app.js");
-const { default: authServ } = await import("../../src/services/auth.service.js");
-const { default: ApiResponse } = await import("../../src/utils/responses/ApiResponse.js");
-const { default: ApiError } = await import("../../src/utils/responses/ApiError.js");
+const { default: authServ } =
+  await import("../../src/services/auth.service.js");
+const { default: ApiResponse } =
+  await import("../../src/utils/responses/ApiResponse.js");
+const { default: ApiError } =
+  await import("../../src/utils/responses/ApiError.js");
 
 const validUser = {
   id: "507f1f77bcf86cd799439011",
@@ -36,12 +41,16 @@ describe("Auth Routes", () => {
   describe("POST /api/v1/auth/login", () => {
     it("should login successfully with valid credentials", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, {
-          user: validUser,
-          accessToken: "access-token-123",
-          refreshToken: "refresh-token-123",
-          sessionId: "session-id-123",
-        }, "logged in successfully")
+        new ApiResponse(
+          200,
+          {
+            user: validUser,
+            accessToken: "access-token-123",
+            refreshToken: "refresh-token-123",
+            sessionId: "session-id-123",
+          },
+          "logged in successfully",
+        ),
       );
 
       const res = await request(app)
@@ -52,24 +61,33 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toBe("logged in successfully");
-      expect(res.body.data.accessToken).toBe("access-token-123");
-      expect(res.body.data.refreshToken).toBe("refresh-token-123");
-      expect(res.body.data.sessionId).toBe("session-id-123");
+      expect(res.body.data.user).toBeDefined();
+      expect(res.body.data.user.email).toBe("test@example.com");
+      expect(res.body.data.user.name).toBe("Test User");
+      expect(res.body.data.accessToken).toBeUndefined();
+      expect(res.body.data.refreshToken).toBeUndefined();
+      expect(res.body.data.sessionId).toBeUndefined();
       expect(res.headers["set-cookie"]).toBeDefined();
       const cookies = res.headers["set-cookie"] as unknown as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(true);
-      expect(cookies.some((c: string) => c.startsWith("refreshToken="))).toBe(true);
-      expect(cookies.some((c: string) => c.startsWith("sessionId="))).toBe(true);
+      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(
+        true,
+      );
+      expect(cookies.some((c: string) => c.startsWith("refreshToken="))).toBe(
+        true,
+      );
+      expect(cookies.some((c: string) => c.startsWith("sessionId="))).toBe(
+        true,
+      );
       expect(authServ.login).toHaveBeenCalledWith(
         "test@example.com",
         "Password123",
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it("should return 400 when email is missing", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Email and Password required")
+        new ApiError(400, "Email and Password required"),
       );
 
       const res = await request(app)
@@ -83,7 +101,7 @@ describe("Auth Routes", () => {
 
     it("should return 400 when password is missing", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Email and Password required")
+        new ApiError(400, "Email and Password required"),
       );
 
       const res = await request(app)
@@ -96,7 +114,7 @@ describe("Auth Routes", () => {
 
     it("should return 404 when user is not found", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(404, "User not found")
+        new ApiError(404, "User not found"),
       );
 
       const res = await request(app)
@@ -110,7 +128,7 @@ describe("Auth Routes", () => {
 
     it("should return 400 when credentials are invalid", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Invalid credentials")
+        new ApiError(400, "Invalid credentials"),
       );
 
       const res = await request(app)
@@ -124,7 +142,7 @@ describe("Auth Routes", () => {
 
     it("should return 400 for invalid email format", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Invalid fields", ["Invalid email"])
+        new ApiError(400, "Invalid fields", ["Invalid email"]),
       );
 
       const res = await request(app)
@@ -136,7 +154,9 @@ describe("Auth Routes", () => {
     });
 
     it("should return 500 when service throws unexpectedly", async () => {
-      (authServ.login as jest.Mock).mockRejectedValue(new Error("Unexpected DB error"));
+      (authServ.login as jest.Mock).mockRejectedValue(
+        new Error("Unexpected DB error"),
+      );
 
       const res = await request(app)
         .post("/api/v1/auth/login")
@@ -148,7 +168,7 @@ describe("Auth Routes", () => {
 
     it("should not set cookies on failed login", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Invalid credentials")
+        new ApiError(400, "Invalid credentials"),
       );
 
       const res = await request(app)
@@ -160,12 +180,16 @@ describe("Auth Routes", () => {
 
     it("should set cookies with httpOnly, secure, sameSite=none for cross-origin", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, {
-          user: validUser,
-          accessToken: "access-token-123",
-          refreshToken: "refresh-token-123",
-          sessionId: "session-id-123",
-        }, "logged in successfully")
+        new ApiResponse(
+          200,
+          {
+            user: validUser,
+            accessToken: "access-token-123",
+            refreshToken: "refresh-token-123",
+            sessionId: "session-id-123",
+          },
+          "logged in successfully",
+        ),
       );
 
       const res = await request(app)
@@ -177,9 +201,15 @@ describe("Auth Routes", () => {
       expect(cookies).toBeDefined();
       expect(cookies.length).toBe(3);
 
-      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="))!;
-      const refreshCookie = cookies.find((c: string) => c.startsWith("refreshToken="))!;
-      const sessionCookie = cookies.find((c: string) => c.startsWith("sessionId="))!;
+      const accessCookie = cookies.find((c: string) =>
+        c.startsWith("accessToken="),
+      )!;
+      const refreshCookie = cookies.find((c: string) =>
+        c.startsWith("refreshToken="),
+      )!;
+      const sessionCookie = cookies.find((c: string) =>
+        c.startsWith("sessionId="),
+      )!;
 
       expect(accessCookie).toContain("HttpOnly");
       expect(accessCookie).toContain("Secure");
@@ -199,12 +229,16 @@ describe("Auth Routes", () => {
 
     it("should set cookies with correct maxAge of 1 day", async () => {
       (authServ.login as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, {
-          user: validUser,
-          accessToken: "access-token-123",
-          refreshToken: "refresh-token-123",
-          sessionId: "session-id-123",
-        }, "logged in successfully")
+        new ApiResponse(
+          200,
+          {
+            user: validUser,
+            accessToken: "access-token-123",
+            refreshToken: "refresh-token-123",
+            sessionId: "session-id-123",
+          },
+          "logged in successfully",
+        ),
       );
 
       const res = await request(app)
@@ -212,7 +246,9 @@ describe("Auth Routes", () => {
         .send({ email: "test@example.com", password: "Password123" });
 
       const cookies = res.headers["set-cookie"] as unknown as string[];
-      const accessCookie = cookies.find((c: string) => c.startsWith("accessToken="))!;
+      const accessCookie = cookies.find((c: string) =>
+        c.startsWith("accessToken="),
+      )!;
       const expectedMaxAge = 24 * 60 * 60;
       expect(accessCookie).toContain(`Max-Age=${expectedMaxAge}`);
     });
@@ -227,16 +263,14 @@ describe("Auth Routes", () => {
         created_on: new Date("2024-01-01"),
       };
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiResponse(201, { user: newUser }, "User created successfully")
+        new ApiResponse(201, { user: newUser }, "User created successfully"),
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/signup")
-        .send({
-          name: "New User",
-          email: "new@example.com",
-          password: "Password123",
-        });
+      const res = await request(app).post("/api/v1/auth/signup").send({
+        name: "New User",
+        email: "new@example.com",
+        password: "Password123",
+      });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -246,13 +280,13 @@ describe("Auth Routes", () => {
       expect(authServ.signup).toHaveBeenCalledWith(
         "New User",
         "Password123",
-        "new@example.com"
+        "new@example.com",
       );
     });
 
     it("should return 400 when name is missing", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Missing input fields")
+        new ApiError(400, "Missing input fields"),
       );
 
       const res = await request(app)
@@ -265,7 +299,7 @@ describe("Auth Routes", () => {
 
     it("should return 400 when email is missing", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Missing input fields")
+        new ApiError(400, "Missing input fields"),
       );
 
       const res = await request(app)
@@ -278,7 +312,7 @@ describe("Auth Routes", () => {
 
     it("should return 400 when password is missing", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Missing input fields")
+        new ApiError(400, "Missing input fields"),
       );
 
       const res = await request(app)
@@ -291,16 +325,14 @@ describe("Auth Routes", () => {
 
     it("should return 400 when password is too short", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Password must be of length 8")
+        new ApiError(400, "Password must be of length 8"),
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/signup")
-        .send({
-          name: "New User",
-          email: "new@example.com",
-          password: "Short1",
-        });
+      const res = await request(app).post("/api/v1/auth/signup").send({
+        name: "New User",
+        email: "new@example.com",
+        password: "Short1",
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -308,16 +340,14 @@ describe("Auth Routes", () => {
 
     it("should return 409 when email already exists", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(409, "Email already exists", [])
+        new ApiError(409, "Email already exists", []),
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/signup")
-        .send({
-          name: "Existing User",
-          email: "existing@example.com",
-          password: "Password123",
-        });
+      const res = await request(app).post("/api/v1/auth/signup").send({
+        name: "Existing User",
+        email: "existing@example.com",
+        password: "Password123",
+      });
 
       expect(res.status).toBe(409);
       expect(res.body.success).toBe(false);
@@ -326,16 +356,14 @@ describe("Auth Routes", () => {
 
     it("should return 400 for invalid email format", async () => {
       (authServ.signup as jest.Mock).mockResolvedValue(
-        new ApiError(400, "Invalid inputs fields", ["Invalid email"])
+        new ApiError(400, "Invalid inputs fields", ["Invalid email"]),
       );
 
-      const res = await request(app)
-        .post("/api/v1/auth/signup")
-        .send({
-          name: "New User",
-          email: "not-valid",
-          password: "Password123",
-        });
+      const res = await request(app).post("/api/v1/auth/signup").send({
+        name: "New User",
+        email: "not-valid",
+        password: "Password123",
+      });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -344,40 +372,11 @@ describe("Auth Routes", () => {
     it("should return 500 when service throws unexpectedly", async () => {
       (authServ.signup as jest.Mock).mockRejectedValue(new Error("DB failure"));
 
-      const res = await request(app)
-        .post("/api/v1/auth/signup")
-        .send({
-          name: "New User",
-          email: "new@example.com",
-          password: "Password123",
-        });
-
-      expect(res.status).toBe(500);
-      expect(res.body.success).toBe(false);
-    });
-  });
-
-  describe("POST /api/v1/auth/google-login", () => {
-    it("should login via google successfully", async () => {
-      (authServ.googleLogin as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, "User created")
-      );
-
-      const res = await request(app)
-        .post("/api/v1/auth/google-login")
-        .send({ token: "google-oauth-token-123" });
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(authServ.googleLogin).toHaveBeenCalledWith("google-oauth-token-123");
-    });
-
-    it("should return 500 when google login service throws", async () => {
-      (authServ.googleLogin as jest.Mock).mockRejectedValue(new Error("Google API error"));
-
-      const res = await request(app)
-        .post("/api/v1/auth/google-login")
-        .send({ token: "bad-token" });
+      const res = await request(app).post("/api/v1/auth/signup").send({
+        name: "New User",
+        email: "new@example.com",
+        password: "Password123",
+      });
 
       expect(res.status).toBe(500);
       expect(res.body.success).toBe(false);

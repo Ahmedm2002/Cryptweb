@@ -19,6 +19,12 @@ import { fromError } from "zod-validation-error";
 import logger from "../utils/logger/logger.js";
 import { UAParser } from "ua-parser-js";
 import type { DeviceInfo } from "../interfaces/user-sessions.model.js";
+type LoginInternalData = {
+  user: SafeUserDto;
+  accessToken: string;
+  refreshToken: string;
+  sessionId: string;
+};
 class AuthService {
   constructor() {}
   /**
@@ -31,7 +37,7 @@ class AuthService {
     email: string,
     password: string,
     userAgent: string,
-  ): Promise<ApiError | ApiResponse<LoginResDto>> {
+  ): Promise<ApiError | ApiResponse<LoginInternalData>> {
     if (!email || !password) {
       logger.warn("Empty value in fields");
       return new ApiError(400, "Email and Password required");
@@ -89,7 +95,7 @@ class AuthService {
       }
       const parsedUser: SafeUserDto = safeUserParse(user);
 
-      return new ApiResponse<LoginResDto>(
+      return new ApiResponse<LoginInternalData>(
         200,
         {
           user: parsedUser,
@@ -161,18 +167,6 @@ class AuthService {
       );
     } catch (error: any) {
       logger.fatal({ err: error }, "Signup failed unexpectedly");
-      return new ApiError(500, CONSTANTS.SERVER_ERROR);
-    }
-  }
-
-  /**
-   *
-   * @param token
-   */
-  async googleLogin(token: string) {
-    try {
-      return new ApiResponse(200, "User created");
-    } catch (error) {
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }

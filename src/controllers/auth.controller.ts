@@ -26,7 +26,7 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
           CONSTANTS.cookieOpts,
         )
         .cookie("sessionId", response.data?.sessionId, CONSTANTS.cookieOpts)
-        .json(response);
+        .json({ ...response, data: { user: response.data?.user } });
     }
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -52,14 +52,4 @@ async function signupUser(req: Request, res: Response): Promise<Response> {
   }
 }
 
-async function googleLogin(req: Request, res: Response): Promise<Response> {
-  const { token } = req.body;
-  try {
-    const response = await authServ.googleLogin(token);
-    return res.status(response.statusCode).json(response);
-  } catch (error: any) {
-    logger.fatal({ err: error }, "Signup failed unexpectedly");
-    return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
-  }
-}
-export { loginUser, signupUser, googleLogin };
+export { loginUser, signupUser };

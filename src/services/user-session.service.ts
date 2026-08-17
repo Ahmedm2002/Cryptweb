@@ -9,12 +9,24 @@ import Users from "../repositories/user.repo.js";
 import { emailToSocketMap } from "../utils/networkStore.js";
 import isValidEmail from "../utils/helperFuncs/isValidEmail.js";
 function sanitizeUser(user: any) {
-  const { password_hash: _, ...safe } = user;
+  const {
+    password_hash,
+    updated_on,
+    created_on,
+    last_login_at,
+    ...safe
+  } = user;
   return safe;
 }
 
 function sanitizeSession(session: any) {
-  const { refresh_token: _, ...safe } = session;
+  const {
+    refresh_token,
+    device_type,
+    expires_at,
+    created_at,
+    ...safe
+  } = session;
   return safe;
 }
 

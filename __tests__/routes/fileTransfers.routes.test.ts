@@ -43,7 +43,13 @@ describe("File Transfers Routes", () => {
         },
       ];
       (fileTransfersServ.getRecentTransfers as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, transfers, "Recent transfers fetched")
+        new ApiResponse(200, {
+          transfers,
+          pageNo: 1,
+          totalPages: 1,
+          totalSent: 5,
+          totalReceived: 3,
+        }, "Recent transfers fetched")
       );
 
       const token = generateValidAccessToken(TEST_USER_ID);
@@ -53,9 +59,13 @@ describe("File Transfers Routes", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].fileType).toBe("image/png");
-      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 10);
+      expect(res.body.data.transfers).toHaveLength(1);
+      expect(res.body.data.transfers[0].fileType).toBe("image/png");
+      expect(res.body.data.pageNo).toBe(1);
+      expect(res.body.data.totalPages).toBe(1);
+      expect(res.body.data.totalSent).toBe(5);
+      expect(res.body.data.totalReceived).toBe(3);
+      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 10, 1);
     });
 
     it("should return 401 when not authenticated", async () => {
@@ -83,7 +93,13 @@ describe("File Transfers Routes", () => {
 
     it("should use custom limit when provided", async () => {
       (fileTransfersServ.getRecentTransfers as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, [], "Recent transfers fetched")
+        new ApiResponse(200, {
+          transfers: [],
+          pageNo: 1,
+          totalPages: 0,
+          totalSent: 0,
+          totalReceived: 0,
+        }, "Recent transfers fetched")
       );
 
       const token = generateValidAccessToken(TEST_USER_ID);
@@ -92,12 +108,18 @@ describe("File Transfers Routes", () => {
         .set("Cookie", `accessToken=${token}`);
 
       expect(res.status).toBe(200);
-      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 5);
+      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 5, 1);
     });
 
     it("should default to limit 10 when no limit is provided", async () => {
       (fileTransfersServ.getRecentTransfers as jest.Mock).mockResolvedValue(
-        new ApiResponse(200, [], "Recent transfers fetched")
+        new ApiResponse(200, {
+          transfers: [],
+          pageNo: 1,
+          totalPages: 0,
+          totalSent: 0,
+          totalReceived: 0,
+        }, "Recent transfers fetched")
       );
 
       const token = generateValidAccessToken(TEST_USER_ID);
@@ -106,7 +128,29 @@ describe("File Transfers Routes", () => {
         .set("Cookie", `accessToken=${token}`);
 
       expect(res.status).toBe(200);
-      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 10);
+      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 10, 1);
+    });
+
+    it("should pass page number to service when provided", async () => {
+      (fileTransfersServ.getRecentTransfers as jest.Mock).mockResolvedValue(
+        new ApiResponse(200, {
+          transfers: [],
+          pageNo: 3,
+          totalPages: 5,
+          totalSent: 20,
+          totalReceived: 30,
+        }, "Recent transfers fetched")
+      );
+
+      const token = generateValidAccessToken(TEST_USER_ID);
+      const res = await request(app)
+        .get("/api/v1/file-transfers/recent?page=3")
+        .set("Cookie", `accessToken=${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.pageNo).toBe(3);
+      expect(res.body.data.totalPages).toBe(5);
+      expect(fileTransfersServ.getRecentTransfers).toHaveBeenCalledWith(TEST_USER_ID, 10, 3);
     });
 
     it("should return 500 when service throws unexpectedly", async () => {

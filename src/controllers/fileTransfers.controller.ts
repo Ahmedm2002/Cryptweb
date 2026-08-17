@@ -12,7 +12,12 @@ async function getRecentTransfers(req: CustomRequest, res: Response) {
       return res.status(401).json(new ApiError(401, "Unauthorized"));
     }
     const limit = parseInt(req.query.limit as string, 10) || 10;
-    const response = await fileTransfersServ.getRecentTransfers(userId, limit);
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const response = await fileTransfersServ.getRecentTransfers(
+      userId,
+      limit,
+      page,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.error({ err: error }, "Failed to fetch recent transfers");
