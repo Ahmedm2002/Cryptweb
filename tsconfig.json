@@ -26,8 +26,7 @@
     "src/app.js",
     "src/**/*.ts",
     "src/**/*.js",
-    "src/*",
-    "__tests__/**/*.ts"
+    "src/*"
   ],
-  "exclude": ["dist", "node_modules", "*.docker", ".git*", "compose.yaml"]
+  "exclude": ["dist", "node_modules", "*.docker", ".git*", "compose.yaml", "__tests__"]
 }

@@ -45,8 +45,10 @@ class UserSessionsRepo {
 
   async deleteAllSessions(userId: string): Promise<string[]> {
     try {
-      const result = await this.col().deleteMany({ user_id: userId });
-      return [];
+      const sessions = await this.col().find({ user_id: userId }).toArray();
+      const ids = sessions.map((s) => s._id.toHexString());
+      await this.col().deleteMany({ user_id: userId });
+      return ids;
     } catch (error: any) {
       logger.error({ err: error }, "Failed to delete all user sessions");
       throw new Error("Error occured during deleting user session");

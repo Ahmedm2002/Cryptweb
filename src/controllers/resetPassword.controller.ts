@@ -17,7 +17,7 @@ async function resetPassword(req: Request, res: Response) {
       token,
       confirmPassword,
     );
-    res.status(response.statusCode).json(response);
+    return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.error({ err: error }, "Reset password failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
@@ -34,7 +34,7 @@ async function forgotPassword(req: Request, res: Response) {
   const { email } = req.body;
   try {
     const response = await resetPasswordServ.forgotPassword(email);
-    res.status(response.statusCode).json(response);
+    return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.error({ err: error }, "Forgot password request failed unexpectedly");
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));

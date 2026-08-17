@@ -19,7 +19,7 @@ async function resendCode(req: Request, res: Response) {
   const { email } = req.body;
   try {
     const response = await verifyUserServ.resendCode(email);
-    res.status(response.statusCode).json(response);
+    return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.error(
       { err: error },

@@ -23,7 +23,7 @@ class VerifyUserService {
     code: string,
   ): Promise<ApiError | ApiResponse<null>> {
     if (!code || !email || code.length !== 6) {
-      return new ApiError(400, "Please enter 4 verification code");
+      return new ApiError(400, "Please enter 6 digit verification code");
     }
     if (!isValidEmail(email)) {
       return new ApiError(400, "Invalid email address");

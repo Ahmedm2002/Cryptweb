@@ -106,6 +106,11 @@ const config: Config = {
   // A preset that is used as a base for Jest's configuration
   preset: "ts-jest/presets/default-esm",
 
+  setupFiles: ["<rootDir>/__tests__/setup.ts"],
+
+  // Exclude setup files from being treated as test suites
+  testPathIgnorePatterns: ["/node_modules/", "/dist/", "__tests__/setup\\.ts$"],
+
   // Run tests from one or more projects
   // projects: undefined,
 
@@ -178,7 +183,7 @@ const config: Config = {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "^.+\\.m?[tj]s?$": ["ts-jest", { useESM: true }],
+    "^.+\\.m?[tj]s?$": ["ts-jest", { useESM: true, diagnostics: false }],
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
