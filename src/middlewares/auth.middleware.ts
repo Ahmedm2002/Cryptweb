@@ -6,6 +6,16 @@ import type CustomRequest from "../types/customReq.type.js";
 import logger from "../utils/logger/logger.js";
 import { UAParser } from "ua-parser-js";
 
+/**
+ * accessToken exits ----> return next()
+ * accessToken missing & refresh Token exists ----> return 401, Token Expired to renew it
+ * accessToken & refreshToken mission -----> return 403, Session not found
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns
+ */
 async function authenticateUser(
   req: CustomRequest,
   res: Response,
@@ -13,9 +23,11 @@ async function authenticateUser(
 ) {
   const { accessToken, refreshToken } = req.cookies;
 
-  if (!accessToken && refreshToken) {
-    return res.status(401).json(new ApiError(401, "Token expired"));
+  if (!accessToken && !refreshToken) {
+    return res.status(403).json(new ApiError(403, "Session not found."));
   }
+  if (accessToken && !refreshToken)
+    return res.status(401).json(new ApiError(401, "Token expired"));
   try {
     const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET!);
     req.user = { id: decoded.sub as string };
@@ -26,9 +38,8 @@ async function authenticateUser(
     if (
       error instanceof JsonWebTokenError ||
       error instanceof TokenExpiredError
-    ) {
+    )
       return res.status(401).json(new ApiError(401, "Token expired"));
-    }
     logger.fatal("Auth Middleware unhandleled scenario", error.message);
     return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
   }

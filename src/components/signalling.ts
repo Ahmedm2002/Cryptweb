@@ -8,11 +8,15 @@ import type {
   WebRTCAnswerPayload,
   WebRTCIceCandidatePayload,
   WebRTCUsersConnectedPayload,
+  CallRequestPayload,
+  CallResponsePayload,
+  CallEndedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
 import {
   emailToSocketMap,
   activePeers,
+  inCallUsers,
   ipToUsersMap,
   normalizeIP,
 } from "../utils/networkStore.js";
@@ -207,6 +211,59 @@ io.on("connection", (socket: Socket) => {
     );
   });
 
+  // *------------------------------------ Call Signalling Events ---------------------------------------*
+  socket.on("call:request", (data: CallRequestPayload) => {
+    logger.info(
+      { from: data.from, to: data.to, type: data.type },
+      "Received call request",
+    );
+    if (!data.from || !data.to || !data.type) return;
+
+    const target = emailToSocketMap.get(data.to);
+    const sender = emailToSocketMap.get(data.from);
+
+    if (!target || inCallUsers.has(data.to)) {
+      socket.emit("call:response", { accepted: false });
+      return;
+    }
+
+    inCallUsers.set(data.from, data.to);
+    inCallUsers.set(data.to, data.from);
+
+    io.to(target.socketId).emit("call:incoming", {
+      from: data.from,
+      name: sender?.name || data.from,
+      type: data.type,
+    });
+  });
+
+  socket.on("call:response", (data: CallResponsePayload) => {
+    logger.info(
+      { from: data.from, to: data.to, accepted: data.accepted },
+      "Received call response",
+    );
+    const caller = emailToSocketMap.get(data.to);
+    if (!caller) return;
+
+    if (!data.accepted) {
+      inCallUsers.delete(data.from);
+      inCallUsers.delete(data.to);
+    }
+
+    io.to(caller.socketId).emit("call:response", { accepted: data.accepted });
+  });
+
+  socket.on("call:ended", (data: CallEndedPayload) => {
+    logger.info({ from: data.from, to: data.to }, "Received call ended");
+    const peer = emailToSocketMap.get(data.to);
+
+    inCallUsers.delete(data.from);
+    inCallUsers.delete(data.to);
+
+    if (!peer) return;
+    io.to(peer.socketId).emit("call:ended", {});
+  });
+
   socket.on("disconnect", () => {
     const email = getEmailBySocketId(socket.id);
     if (email) {
@@ -224,6 +281,16 @@ io.on("connection", (socket: Socket) => {
         }
         activePeers.delete(email);
         activePeers.delete(peerEmail);
+      }
+
+      const callPeerEmail = inCallUsers.get(email);
+      if (callPeerEmail) {
+        const callPeerInfo = emailToSocketMap.get(callPeerEmail);
+        if (callPeerInfo) {
+          io.to(callPeerInfo.socketId).emit("call:ended", {});
+        }
+        inCallUsers.delete(email);
+        inCallUsers.delete(callPeerEmail);
       }
 
       const usersOnIP = ipToUsersMap.get(clientIP);

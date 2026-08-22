@@ -3,6 +3,8 @@ export const emailToSocketMap: Map<string, { socketId: string; name: string }> =
 
 export const activePeers: Map<string, string> = new Map();
 
+export const inCallUsers: Map<string, string> = new Map();
+
 export const ipToUsersMap: Map<string, Set<string>> = new Map();
 
 export function normalizeIP(ip: string): string {

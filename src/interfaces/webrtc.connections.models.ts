@@ -20,3 +20,20 @@ export interface WebRTCUsersConnectedPayload {
   initiator: string;
   receiver: string;
 }
+
+export interface CallRequestPayload {
+  from: string;
+  to: string;
+  type: "video" | "audio";
+}
+
+export interface CallResponsePayload {
+  from: string;
+  to: string;
+  accepted: boolean;
+}
+
+export interface CallEndedPayload {
+  from: string;
+  to: string;
+}
