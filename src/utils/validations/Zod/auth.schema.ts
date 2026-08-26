@@ -1,5 +1,10 @@
 import * as z from "zod";
-import { emailSchema, passwordSchema, userNameSchema } from "../schemas.js";
+import {
+  emailSchema,
+  passwordSchema,
+  userNameSchema,
+  userHandleSchema,
+} from "../schemas.js";
 import { createErrorMap } from "zod-validation-error";
 
 z.config({
@@ -9,6 +14,7 @@ z.config({
 const signupSchema = z.object({
   email: emailSchema,
   userName: userNameSchema,
+  username: userHandleSchema,
   password: passwordSchema,
 });
 

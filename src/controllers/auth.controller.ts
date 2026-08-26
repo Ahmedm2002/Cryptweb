@@ -42,9 +42,9 @@ async function loginUser(req: Request, res: Response): Promise<Response> {
  * @returns
  */
 async function signupUser(req: Request, res: Response): Promise<Response> {
-  const { name, password, email } = req.body;
+  const { name, password, email, username } = req.body;
   try {
-    const response = await authServ.signup(name, password, email);
+    const response = await authServ.signup(name, password, email, username);
     return res.status(response.statusCode).json(response);
   } catch (error: any) {
     logger.fatal({ err: error }, "Signup failed unexpectedly");

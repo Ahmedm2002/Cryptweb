@@ -6,6 +6,7 @@ function safeUserParse(user: userI): SafeUserDto {
     id: user.id,
     email: user.email,
     name: user.name,
+    username: user.username,
     profile_picture: user?.profile_picture ?? "",
     created_on: user?.created_on!,
     verified_at: user?.verified_at ?? null,

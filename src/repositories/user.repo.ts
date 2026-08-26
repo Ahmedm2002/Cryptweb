@@ -51,13 +51,13 @@ class UsersRepo {
    * @returns
    */
   async createUser(
-    user: Pick<userI, "name" | "password_hash" | "email">,
+    user: Pick<userI, "name" | "password_hash" | "email" | "username">,
   ): Promise<userI> {
-    const { name, email, password_hash } = user;
+    const { name, email, password_hash, username } = user;
     try {
       const result: QueryResult = await pool.query(
-        `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, verified_at, created_on`,
-        [name, email, password_hash],
+        `INSERT INTO users (name, email, password_hash, username) VALUES ($1, $2, $3, $4) RETURNING id, name, email, username, verified_at, created_on`,
+        [name, email, password_hash, username],
       );
       return result.rows[0];
     } catch (error: any) {
@@ -182,11 +182,11 @@ class UsersRepo {
     query: string,
     requesterId: string,
     excludeFriendIds: string[],
-  ): Promise<Pick<userI, "id" | "name" | "username" | "profile_picture">[]> {
+  ): Promise<Pick<userI, "id" | "name" | "username" | "email" | "profile_picture">[]> {
     try {
       const params: any[] = [`%${query}%`, requesterId];
       let queryStr =
-        "SELECT id, name, username, profile_picture FROM users WHERE username ILIKE $1 AND id != $2 AND deleted_at IS NULL";
+        "SELECT id, name, username, email, profile_picture FROM users WHERE (username ILIKE $1 OR email ILIKE $1) AND id != $2 AND deleted_at IS NULL";
 
       if (excludeFriendIds.length > 0) {
         params.push(excludeFriendIds);
@@ -197,8 +197,8 @@ class UsersRepo {
       const result: QueryResult = await pool.query(queryStr, params);
       return result.rows;
     } catch (error: any) {
-      logger.error({ err: error }, "Failed to search users by username");
-      throw new Error("Error searching users by username");
+      logger.error({ err: error }, "Failed to search users by username or email");
+      throw new Error("Error searching users by username or email");
     }
   }
 

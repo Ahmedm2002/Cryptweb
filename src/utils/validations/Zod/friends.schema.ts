@@ -28,10 +28,15 @@ const updateConversationPreferencesSchema = z.object({
   saveMessages: z.boolean(),
 });
 
+const checkUsernameSchema = z.object({
+  username: z.string().trim().min(1, "Username is required"),
+});
+
 export {
   searchUsersSchema,
   updateSettingsSchema,
   sendFriendRequestSchema,
   friendRequestListSchema,
   updateConversationPreferencesSchema,
+  checkUsernameSchema,
 };

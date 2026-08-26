@@ -38,4 +38,15 @@ async function updateSettings(req: CustomRequest, res: Response) {
   }
 }
 
-export { searchUsers, updateSettings };
+async function checkUsername(req: Request, res: Response) {
+  const { username } = req.query;
+  try {
+    const response = await userServ.checkUsername(username as string);
+    return res.status(response.statusCode).json(response);
+  } catch (error: any) {
+    logger.fatal({ err: error }, "Failed to check username");
+    return res.status(500).json(new ApiError(500, CONSTANTS.SERVER_ERROR));
+  }
+}
+
+export { searchUsers, updateSettings, checkUsername };

@@ -10,4 +10,14 @@ const passwordSchema = z
 
 const userNameSchema = z.string().trim().min(3, "Invalid user name");
 
-export { emailSchema, passwordSchema, userNameSchema };
+const userHandleSchema = z
+  .string()
+  .trim()
+  .min(3, "Username must be at least 3 characters")
+  .max(30, "Username must be at most 30 characters")
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "Username can only contain letters, numbers, and underscores",
+  );
+
+export { emailSchema, passwordSchema, userNameSchema, userHandleSchema };

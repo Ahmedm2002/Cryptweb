@@ -4,7 +4,8 @@ import Friendship from "../repositories/friendship.repo.js";
 import Conversation from "../repositories/conversation.repo.js";
 import ApiError from "../utils/responses/ApiError.js";
 import ApiResponse from "../utils/responses/ApiResponse.js";
-import { searchUsersSchema, updateSettingsSchema } from "../utils/validations/Zod/friends.schema.js";
+import { searchUsersSchema, updateSettingsSchema, checkUsernameSchema } from "../utils/validations/Zod/friends.schema.js";
+import { userHandleSchema } from "../utils/validations/schemas.js";
 import { fromError } from "zod-validation-error";
 import logger from "../utils/logger/logger.js";
 
@@ -65,6 +66,30 @@ class UserService {
       return new ApiResponse(200, null, "Settings updated successfully");
     } catch (error: any) {
       logger.fatal({ err: error }, "Failed to update settings");
+      return new ApiError(500, CONSTANTS.SERVER_ERROR);
+    }
+  }
+
+  async checkUsername(
+    username: string,
+  ): Promise<ApiError | ApiResponse<{ available: boolean }>> {
+    const validate = checkUsernameSchema.safeParse({ username });
+    if (!validate.success) {
+      const validationError = fromError(validate.error);
+      return new ApiError(400, "Invalid fields", [validationError.message]);
+    }
+
+    const handleValidation = userHandleSchema.safeParse(validate.data.username);
+    if (!handleValidation.success) {
+      const validationError = fromError(handleValidation.error);
+      return new ApiError(400, "Invalid username", [validationError.message]);
+    }
+
+    try {
+      const existing = await Users.getByUsername(validate.data.username);
+      return new ApiResponse(200, { available: !existing }, "Username check completed");
+    } catch (error: any) {
+      logger.fatal({ err: error }, "Failed to check username");
       return new ApiError(500, CONSTANTS.SERVER_ERROR);
     }
   }

@@ -116,8 +116,9 @@ class AuthService {
     name: string,
     password: string,
     email: string,
+    username: string,
   ): Promise<ApiError | ApiResponse<SignupResDto>> {
-    if (!name || !password || !email) {
+    if (!name || !password || !email || !username) {
       return new ApiError(400, "Missing input fields");
     }
     if (password.length < 8) {
@@ -128,6 +129,7 @@ class AuthService {
         userName: name,
         password,
         email,
+        username,
       });
       if (!validate.success) {
         let validationError = fromError(validate.error);
@@ -141,11 +143,17 @@ class AuthService {
         return new ApiError(409, "Email already exists", []);
       }
 
+      const existingUsername: userI = await Users.getByUsername(username);
+      if (existingUsername) {
+        return new ApiError(409, "Username already taken", []);
+      }
+
       const password_hash = await bcrypt.hash(password, 10);
       const newUser: userI = await Users.createUser({
         name,
         email,
         password_hash,
+        username,
       });
       // TODO: Implement the email sending using queues
       // process.nextTick(async () => {

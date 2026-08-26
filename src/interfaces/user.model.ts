@@ -2,7 +2,7 @@ export interface userI {
   id: string;
   email: string;
   name: string;
-  username?: string;
+  username: string;
   password_hash: string;
   profile_picture?: string;
   save_messages_default?: boolean;

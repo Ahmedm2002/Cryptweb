@@ -2,6 +2,7 @@ export interface SafeUserDto {
   id: string;
   email: string;
   name: string;
+  username: string;
   profile_picture?: string;
   created_on?: Date;
   verified_at?: Date | null;
