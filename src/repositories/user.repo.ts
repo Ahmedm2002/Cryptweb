@@ -164,6 +164,71 @@ class UsersRepo {
       logger.error({ err: error }, "Failed to set user verified state");
     }
   }
+
+  async getByUsername(username: string): Promise<userI> {
+    try {
+      const result: QueryResult = await pool.query(
+        "SELECT id, name, email, username, profile_picture FROM users WHERE username = $1 AND deleted_at IS NULL",
+        [username],
+      );
+      return result.rows[0] ?? null;
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to get user by username");
+      throw new Error("Error retrieving user by username");
+    }
+  }
+
+  async searchByUsername(
+    query: string,
+    requesterId: string,
+    excludeFriendIds: string[],
+  ): Promise<Pick<userI, "id" | "name" | "username" | "profile_picture">[]> {
+    try {
+      const params: any[] = [`%${query}%`, requesterId];
+      let queryStr =
+        "SELECT id, name, username, profile_picture FROM users WHERE username ILIKE $1 AND id != $2 AND deleted_at IS NULL";
+
+      if (excludeFriendIds.length > 0) {
+        params.push(excludeFriendIds);
+        queryStr += ` AND id != ALL($${params.length}::uuid[])`;
+      }
+
+      queryStr += " LIMIT 20";
+      const result: QueryResult = await pool.query(queryStr, params);
+      return result.rows;
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to search users by username");
+      throw new Error("Error searching users by username");
+    }
+  }
+
+  async updateSaveMessagesDefault(
+    userId: string,
+    saveMessagesDefault: boolean,
+  ): Promise<void> {
+    try {
+      await pool.query(
+        "UPDATE users SET save_messages_default = $1 WHERE id = $2",
+        [saveMessagesDefault, userId],
+      );
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to update save messages default");
+      throw new Error("Error updating save messages default");
+    }
+  }
+
+  async getSaveMessagesDefault(userId: string): Promise<boolean> {
+    try {
+      const result: QueryResult = await pool.query(
+        "SELECT save_messages_default FROM users WHERE id = $1",
+        [userId],
+      );
+      return result.rows[0]?.save_messages_default ?? false;
+    } catch (error: any) {
+      logger.error({ err: error }, "Failed to get save messages default");
+      throw new Error("Error getting save messages default");
+    }
+  }
 }
 
 const Users = new UsersRepo();

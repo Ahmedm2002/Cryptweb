@@ -638,8 +638,8 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 **Query Parameters:**
 
-| Param  | Type     | Default | Max | Description            |
-| ------ | -------- | ------- | --- | ---------------------- |
+| Param   | Type     | Default | Max | Description                   |
+| ------- | -------- | ------- | --- | ----------------------------- |
 | `limit` | `number` | 10      | 50  | Number of transfers to return |
 
 **Response (200):**
@@ -668,8 +668,8 @@ On success, clears cookies: `accessToken`, `refreshToken`, `deviceId`.
 
 **Errors:**
 
-| Status | Message                   | Condition        |
-| ------ | ------------------------- | ---------------- |
+| Status | Message                   | Condition         |
+| ------ | ------------------------- | ----------------- |
 | `401`  | `Unauthorized`            | Not authenticated |
 | `500`  | `Something went wrong...` | Unexpected error  |
 
@@ -862,16 +862,14 @@ Client IP is detected via `x-forwarded-for` header (trust proxy) or `socket.hand
 
 **Direction:** Client → Server
 
-**Payload:** *(none)*
+**Payload:** _(none)_
 
 **Response:**
 
 `network:users` (Server → Client):
 
 ```json
-[
-  { "email": "string", "name": "string" }
-]
+[{ "email": "string", "name": "string" }]
 ```
 
 Returns all registered users connected from the same IP.
@@ -933,20 +931,20 @@ Returns all registered users connected from the same IP.
 
 ### 6.8 Summary of Server → Client Events
 
-| Event Name           | When Emitted                                                                    |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `registration-error` | `user:register` fails (user not in DB or internal error)                        |
-| `network:user-joined` | A new user registered on the same network IP                                  |
-| `network:user-left`   | A user on the same network IP disconnected                                    |
-| `network:users`      | Response to a `network:users` request                                           |
-| `status-update`      | Response to `connection:request` (online/offline status)                        |
-| `connection:incoming` | Forwarded to target when someone requests a connection                         |
-| `connection:response` | Forwarded to initiator with the responder's decision                           |
-| `offer`              | Forwarded from another peer                                                     |
-| `answer`             | Forwarded from another peer                                                     |
-| `ice-candidate`      | Forwarded from another peer                                                     |
-| `user-status`        | Target user offline (on offer/answer/ice-candidate)                             |
-| `peer:disconnected`  | An active peer disconnected                                                     |
+| Event Name            | When Emitted                                             |
+| --------------------- | -------------------------------------------------------- |
+| `registration-error`  | `user:register` fails (user not in DB or internal error) |
+| `network:user-joined` | A new user registered on the same network IP             |
+| `network:user-left`   | A user on the same network IP disconnected               |
+| `network:users`       | Response to a `network:users` request                    |
+| `status-update`       | Response to `connection:request` (online/offline status) |
+| `connection:incoming` | Forwarded to target when someone requests a connection   |
+| `connection:response` | Forwarded to initiator with the responder's decision     |
+| `offer`               | Forwarded from another peer                              |
+| `answer`              | Forwarded from another peer                              |
+| `ice-candidate`       | Forwarded from another peer                              |
+| `user-status`         | Target user offline (on offer/answer/ice-candidate)      |
+| `peer:disconnected`   | An active peer disconnected                              |
 
 ---
 
@@ -954,11 +952,11 @@ Returns all registered users connected from the same IP.
 
 **Source:** `src/utils/networkStore.ts`
 
-| Map                | Key Type         | Value Type                           | Purpose                                    |
-| ------------------ | ---------------- | ------------------------------------ | ------------------------------------------ |
-| `emailToSocketMap` | `string` (email) | `{ socketId: string, name: string }` | Maps registered emails to socket IDs       |
-| `activePeers`      | `string` (email) | `string` (peer email)                | Tracks active P2P connections              |
-| `ipToUsersMap`     | `string` (IP)    | `Set<string>` (emails)               | Groups connected users by their client IP  |
+| Map                | Key Type         | Value Type                           | Purpose                                   |
+| ------------------ | ---------------- | ------------------------------------ | ----------------------------------------- |
+| `emailToSocketMap` | `string` (email) | `{ socketId: string, name: string }` | Maps registered emails to socket IDs      |
+| `activePeers`      | `string` (email) | `string` (peer email)                | Tracks active P2P connections             |
+| `ipToUsersMap`     | `string` (IP)    | `Set<string>` (emails)               | Groups connected users by their client IP |
 
 ---
 
@@ -1068,40 +1066,40 @@ Returns all registered users connected from the same IP.
 
 ### `file_transfers`
 
-| Column          | Type              | Constraints              |
-| --------------- | ----------------- | ------------------------ |
-| `id`            | `UUID`            | PK                       |
-| `sender`        | `UUID`            | NOT NULL, FK → users(id) |
-| `receiver`      | `UUID`            | NOT NULL, FK → users(id) |
-| `file_size`     | `NUMERIC(10,2)`   | NOT NULL (in MB)         |
-| `file_type`     | `TEXT`            | NOT NULL                 |
-| `time_elapsed`  | `DOUBLE PRECISION` | NOT NULL                |
-| `completed_at`  | `TIMESTAMPTZ`     | DEFAULT NULL             |
-| `transfer_type` | `TEXT`            | NOT NULL                 |
+| Column          | Type               | Constraints              |
+| --------------- | ------------------ | ------------------------ |
+| `id`            | `UUID`             | PK                       |
+| `sender`        | `UUID`             | NOT NULL, FK → users(id) |
+| `receiver`      | `UUID`             | NOT NULL, FK → users(id) |
+| `file_size`     | `NUMERIC(10,2)`    | NOT NULL (in MB)         |
+| `file_type`     | `TEXT`             | NOT NULL                 |
+| `time_elapsed`  | `DOUBLE PRECISION` | NOT NULL                 |
+| `completed_at`  | `TIMESTAMPTZ`      | DEFAULT NULL             |
+| `transfer_type` | `TEXT`             | NOT NULL                 |
 
 ---
 
 ## 10. Edge Cases Handled In Code
 
-| Scenario                              | Where Handled                        | Response                      |
-| ------------------------------------- | ------------------------------------ | ----------------------------- |
-| Missing required fields               | All services                         | `400` with specific message   |
-| Invalid email format                  | Verify, Reset, FileTransfer services | `400` Invalid email address   |
-| Invalid UUID format                   | Session service, Token service       | `400` Invalid user id         |
-| User not found by email               | Auth, Verify, Reset, Signaling       | `404` User not found          |
-| User not found by ID                  | Token service                        | `404` User not found          |
-| Duplicate email on signup             | Auth service                         | `409` Email already exists    |
-| Password mismatch on login            | Auth service                         | `400` Invalid credentials     |
-| Password ≠ confirmPassword on reset   | Reset service                        | `400` Password does not match |
-| Expired OTP code                      | Verify service                       | `400` Token Expired           |
-| Already verified email                | Verify service                       | `200` Email already verified  |
-| Reset token already used              | Reset service                        | `400` Token already used      |
-| Reset token expired                   | Reset service                        | `400` Reset Token Expired     |
-| Refresh token expired                 | Token service                        | `400` Refresh token expired   |
-| Invalid refresh token hash            | Token service                        | `400` Invalid refresh Token   |
-| No active sessions found              | Session service                      | `404` No user session found   |
-| Target user offline (socket)          | Signaling (offer/answer/ice)         | `user-status` event emitted   |
-| Unregistered email on socket register | Signaling                            | `registration-error` event    |
+| Scenario                              | Where Handled                        | Response                          |
+| ------------------------------------- | ------------------------------------ | --------------------------------- |
+| Missing required fields               | All services                         | `400` with specific message       |
+| Invalid email format                  | Verify, Reset, FileTransfer services | `400` Invalid email address       |
+| Invalid UUID format                   | Session service, Token service       | `400` Invalid user id             |
+| User not found by email               | Auth, Verify, Reset, Signaling       | `404` User not found              |
+| User not found by ID                  | Token service                        | `404` User not found              |
+| Duplicate email on signup             | Auth service                         | `409` Email already exists        |
+| Password mismatch on login            | Auth service                         | `400` Invalid credentials         |
+| Password ≠ confirmPassword on reset   | Reset service                        | `400` Password does not match     |
+| Expired OTP code                      | Verify service                       | `400` Token Expired               |
+| Already verified email                | Verify service                       | `200` Email already verified      |
+| Reset token already used              | Reset service                        | `400` Token already used          |
+| Reset token expired                   | Reset service                        | `400` Reset Token Expired         |
+| Refresh token expired                 | Token service                        | `400` Refresh token expired       |
+| Invalid refresh token hash            | Token service                        | `400` Invalid refresh Token       |
+| No active sessions found              | Session service                      | `404` No user session found       |
+| Target user offline (socket)          | Signaling (offer/answer/ice)         | `user-status` event emitted       |
+| Unregistered email on socket register | Signaling                            | `registration-error` event        |
 | Active peer disconnects               | Signaling (disconnect handler)       | `peer:disconnected` event to peer |
 | Network user joins                    | Signaling (`user:register`)          | `network:user-joined` broadcast   |
 | Network user leaves                   | Signaling (disconnect handler)       | `network:user-left` broadcast     |

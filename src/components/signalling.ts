@@ -13,8 +13,13 @@ import type {
   CallEndedPayload,
 } from "../interfaces/webrtc.connections.models.js";
 import Users from "../repositories/user.repo.js";
+import Friendship from "../repositories/friendship.repo.js";
+import Conversation from "../repositories/conversation.repo.js";
+import Message from "../repositories/message.repo.js";
+import Notification from "../repositories/notification.repo.js";
 import {
   emailToSocketMap,
+  idToSocketMap,
   activePeers,
   inCallUsers,
   ipToUsersMap,
@@ -66,6 +71,11 @@ io.on("connection", (socket: Socket) => {
       } else {
         emailToSocketMap.set(email, { socketId: socket.id, name });
       }
+
+      if (idToSocketMap.has(user.id)) {
+        idToSocketMap.delete(user.id);
+      }
+      idToSocketMap.set(user.id, { socketId: socket.id, name });
 
       const room = `network:${clientIP}`;
       socket.join(room);
@@ -156,6 +166,22 @@ io.on("connection", (socket: Socket) => {
           });
         } else {
           logger.info({ to: data.to }, "Target user offline");
+
+          const senderUser = await Users.getByEmail(data.from);
+          if (senderUser) {
+            const notif = await Notification.create(
+              user.id,
+              "connection_attempt",
+              senderUser.id,
+            );
+            if (notif) {
+              const targetSocket = idToSocketMap.get(user.id);
+              if (targetSocket) {
+                io.to(targetSocket.socketId).emit("notification:new", notif);
+              }
+            }
+          }
+
           socket.emit("status-update", {
             isOnline: false,
             userExists: true,
@@ -309,8 +335,103 @@ io.on("connection", (socket: Socket) => {
       }
     }
     removeEmailFromMap(socket.id);
+    removeIdFromMap(socket.id);
     logger.info({ socketId: socket.id, ip: clientIP }, "Client disconnected");
   });
+
+  // *------------------------------------ Chat Messaging ---------------------------------------*
+  socket.on(
+    "message:send",
+    async (data: { conversationId: string; to: string; content: string }) => {
+      const senderEmail = getEmailBySocketId(socket.id);
+      if (!senderEmail) return;
+
+      const senderUser = await Users.getByEmail(senderEmail);
+      if (!senderUser) return;
+
+      const { conversationId, to, content } = data;
+      if (!conversationId || !to || !content) return;
+
+      try {
+        const isFriend = await Friendship.exists(senderUser.id, to);
+        if (!isFriend) {
+          logger.warn(
+            { senderId: senderUser.id, to },
+            "Message rejected: not friends",
+          );
+          return;
+        }
+
+        const conversation = await Conversation.getById(conversationId);
+        if (!conversation) return;
+        if (
+          conversation.user_one_id !== senderUser.id &&
+          conversation.user_two_id !== senderUser.id
+        ) {
+          return;
+        }
+
+        const senderPref = await Conversation.getPreference(
+          conversationId,
+          senderUser.id,
+        );
+        const receiverPref = await Conversation.getPreference(
+          conversationId,
+          to,
+        );
+
+        const senderDefault = await Users.getSaveMessagesDefault(senderUser.id);
+        const receiverDefault = await Users.getSaveMessagesDefault(to);
+
+        const saveForSender = senderPref
+          ? senderPref.save_messages
+          : senderDefault;
+        const saveForReceiver = receiverPref
+          ? receiverPref.save_messages
+          : receiverDefault;
+
+        let messageId: string | null = null;
+        if (saveForSender || saveForReceiver) {
+          const msg = await Message.create(
+            conversationId,
+            senderUser.id,
+            content,
+            saveForSender,
+            saveForReceiver,
+          );
+          if (msg) messageId = msg.id;
+        }
+
+        const receiverSocket = idToSocketMap.get(to);
+        if (receiverSocket) {
+          io.to(receiverSocket.socketId).emit("message:receive", {
+            conversationId,
+            from: senderUser.id,
+            content,
+            createdAt: new Date(),
+          });
+          socket.emit("message:send-ack", {
+            delivered: true,
+            messageId,
+          });
+        } else {
+          socket.emit("message:send-ack", {
+            delivered: false,
+            messageId,
+          });
+        }
+      } catch (err) {
+        logger.error(
+          { err, senderId: senderUser.id, to },
+          "Error processing message:send",
+        );
+        socket.emit("message:send-ack", {
+          delivered: false,
+          messageId: null,
+        });
+      }
+    },
+  );
 
   // *------------------------------------ WebRTC Signalling Events ---------------------------------------*
   socket.on("offer", (data: WebRTCOfferPayload) => {
@@ -355,7 +476,7 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
-export { httpServer };
+export { httpServer, io };
 
 // **************************************** Helper Functions ********************************************
 function removeEmailFromMap(id: string) {
@@ -363,6 +484,16 @@ function removeEmailFromMap(id: string) {
   const entry = getEmailBySocketId(id);
   if (!entry) return;
   emailToSocketMap.delete(entry);
+}
+
+function removeIdFromMap(socketId: string) {
+  if (!socketId) return;
+  for (const [userId, entry] of idToSocketMap.entries()) {
+    if (entry.socketId === socketId) {
+      idToSocketMap.delete(userId);
+      break;
+    }
+  }
 }
 
 function getEmailBySocketId(id: string): string | null {

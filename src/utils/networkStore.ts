@@ -1,6 +1,9 @@
 export const emailToSocketMap: Map<string, { socketId: string; name: string }> =
   new Map();
 
+export const idToSocketMap: Map<string, { socketId: string; name: string }> =
+  new Map();
+
 export const activePeers: Map<string, string> = new Map();
 
 export const inCallUsers: Map<string, string> = new Map();
